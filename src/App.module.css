@@ -1,0 +1,20 @@
+.container {
+  width: 400px;
+  height: 200px;
+  background-color: rgba(0, 0, 0, 0.1);
+  overflow: auto;
+  padding: 10px;
+}
+
+.container p {
+  margin: 0 0 10px;
+}
+
+.container p:last-of-type {
+  margin-bottom: 0;
+}
+
+.firefox {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
