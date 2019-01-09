@@ -1,26 +1,25 @@
 import React, {Component} from 'react';
 import classNames from 'classnames';
-import platform from 'platform';
 import styles from './App.module.css';
 
+// There are a few various contexts we need to be able to support
+// * Chrome - supports custom scrollbar styles which automatically pad the
+// content for us
+// * Firefox - Latest version of firefox supports custom scrollbars but on mac,
+// depending on settings the scrollbar may or may not pad the content, so we
+// need to detect whether the content is padded or not from the custom
+// scrollbar styles
+// * All other browsers - if the custom css scrollbar styles affect the
+// scrollbar within the desired range then we assume it looks correct,
+// otherwise we need to add additional padding to account for the scrollbar
 const padScrollbar = (() => {
-  const el = document.createElement('div');
-  el.className = styles.container;
-  el.style.overflow = 'scroll';
-  el.style.width = '200px';
-  el.style.height = '200px';
-  el.style.position = 'absolute';
-  el.style.top = '-200px';
+  let el = document.createElement('div');
+  el.className = styles.testStyles;
   document.body.appendChild(el);
-  const retValue = el.clientWidth === el.offsetWidth;
-  console.log('retValue is', retValue);
+  const difference = el.offsetWidth - el.clientWidth;
+  const retValue = !(difference > 0 && difference <= 11);
   document.body.removeChild(el);
-  if (platform.layout === 'EdgeHTML') {
-    return true;
-  }
-  if (platform.layout !== 'Gecko') {
-    return false;
-  }
+  el = null;
   return retValue;
 })();
 

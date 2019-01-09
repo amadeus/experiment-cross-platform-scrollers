@@ -1,7 +1,7 @@
 .container {
   width: 400px;
   height: 200px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -27,7 +27,6 @@
 /* Chrome Styles */
 .container::-webkit-scrollbar {
   width: 8px;
-  height: 100%;
 }
 
 /* Chrome Styles */
@@ -48,4 +47,18 @@
   padding: 5px 10px;
   background-color: rgba(0, 0, 255, 0.1);
   margin: 1px 0 1px;
+}
+
+.testStyles {
+  position: absolute;
+  top: -999px;
+  left: -999px;
+  width: 200px;
+  height: 200px;
+  scrollbar-width: thin;
+  overflow: scroll;
+}
+
+.testStyles::-webkit-scrollbar {
+  width: 8px;
 }
