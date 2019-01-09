@@ -1,32 +1,59 @@
 import React, {Component} from 'react';
 import classNames from 'classnames';
+import platform from 'platform';
 import styles from './App.module.css';
+
+const padScrollbar = (() => {
+  const el = document.createElement('div');
+  el.className = styles.container;
+  el.style.overflow = 'scroll';
+  el.style.width = '200px';
+  el.style.height = '200px';
+  el.style.position = 'absolute';
+  el.style.top = '-200px';
+  document.body.appendChild(el);
+  const retValue = el.clientWidth === el.offsetWidth;
+  console.log('retValue is', retValue);
+  document.body.removeChild(el);
+  if (platform.layout === 'EdgeHTML') {
+    return true;
+  }
+  if (platform.layout !== 'Gecko') {
+    return false;
+  }
+  return retValue;
+})();
 
 class App extends Component {
   render() {
     return (
-      <div className={classNames(styles.container, styles.firefox)}>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-          est laborum.
-        </p>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-          est laborum.
-        </p>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-          magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-          consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
-          est laborum.
-        </p>
+      <div className={classNames(styles.container, {[styles.padScrollbar]: padScrollbar})}>
+        <div className={styles.padding}>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+          <div className={styles.item}>An Item</div>
+        </div>
       </div>
     );
   }

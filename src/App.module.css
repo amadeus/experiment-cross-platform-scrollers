@@ -2,19 +2,50 @@
   width: 400px;
   height: 200px;
   background-color: rgba(0, 0, 0, 0.1);
-  overflow: auto;
-  padding: 10px;
-}
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
 
-.container p {
-  margin: 0 0 10px;
-}
-
-.container p:last-of-type {
-  margin-bottom: 0;
-}
-
-.firefox {
+  /* Firefox Styles */
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) rgba(255, 0, 0, 0.1);
+  scrollbar-color: transparent transparent;
+}
+
+.padding {
+  padding: 7px 0 7px 8px;
+}
+
+.padScrollbar {
+  padding-right: 8px;
+}
+
+/* Firefox Styles */
+.container:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Chrome Styles */
+.container::-webkit-scrollbar {
+  width: 8px;
+  height: 100%;
+}
+
+/* Chrome Styles */
+.container::-webkit-scrollbar-thumb {
+  background-clip: padding-box;
+  border: 2px solid transparent;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  visibility: hidden;
+}
+
+/* Chrome Styles */
+.container:hover::-webkit-scrollbar-thumb {
+  visibility: visible;
+}
+
+.item {
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 255, 0.1);
+  margin: 1px 0 1px;
 }
