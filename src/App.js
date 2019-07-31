@@ -16,7 +16,7 @@ import styles from './App.module.css';
 
 export default () => {
   const ref = useRef(null);
-  const [size, setSize] = useState(ScrollbarSizes.AUTO);
+  const [size, setSize] = useState(ScrollbarSizes.THIN);
 
   useEffect(() => {
     const {current} = ref;
