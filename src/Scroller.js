@@ -52,7 +52,7 @@ function Scroller({children, className, type, fade = false}, ref) {
   const scroller = useRef(null);
 
   // Fix side padding
-  useLayoutEffect(() => cleanupPadding(ref, type), [type, className]);
+  useLayoutEffect(() => cleanupPadding(scroller, type), [type, className]);
 
   // Fixes for FF and Edge - bottom padding
   // const [paddingBottom, setPaddingBottom] = useState(null);
