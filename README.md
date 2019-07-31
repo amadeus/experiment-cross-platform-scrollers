@@ -1,6 +1,6 @@
 # Cross Platform Scrollbar Experiments
 
-[live example](https://ffscroller-qquzw6qih.now.sh/)
+[live example](https://ffscroller.amadeus.now.sh/)
 
 This is a very simple test case for setting up custom scrollbars that can be
 used on the latest versions of most major browsers (Chrome, Firefox, Safari)
