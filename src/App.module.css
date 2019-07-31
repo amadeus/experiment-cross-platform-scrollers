@@ -1,46 +1,15 @@
 .container {
   width: 400px;
   height: 200px;
-  background-color: rgba(0, 0, 0, 0.2);
-  overflow-y: scroll;
-  display: flex;
-  flex-direction: column;
-
-  /* Firefox Styles */
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+  background-color: #ccc;
 }
 
-.padding {
-  padding: 7px 0 7px 8px;
+.thin {
+  padding: 8px;
 }
 
-.padScrollbar {
-  padding-right: 8px;
-}
-
-/* Firefox Styles */
-.container:hover {
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-}
-
-/* Chrome Styles */
-.container::-webkit-scrollbar {
-  width: 8px;
-}
-
-/* Chrome Styles */
-.container::-webkit-scrollbar-thumb {
-  background-clip: padding-box;
-  border: 2px solid transparent;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  visibility: hidden;
-}
-
-/* Chrome Styles */
-.container:hover::-webkit-scrollbar-thumb {
-  visibility: visible;
+.auto {
+  padding: 0 16px;
 }
 
 .item {
@@ -49,16 +18,6 @@
   margin: 1px 0 1px;
 }
 
-.testStyles {
-  position: absolute;
-  top: -999px;
-  left: -999px;
-  width: 200px;
-  height: 200px;
-  scrollbar-width: thin;
-  overflow: scroll;
-}
-
-.testStyles::-webkit-scrollbar {
-  width: 8px;
+.select {
+  margin-bottom: 8px;
 }

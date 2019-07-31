@@ -1,5 +1,6 @@
-import React, {Component} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import classNames from 'classnames';
+import Scroller, {ScrollbarSizes} from './Scroller';
 import styles from './App.module.css';
 
 // There are a few various contexts we need to be able to support
@@ -12,50 +13,58 @@ import styles from './App.module.css';
 // * All other browsers - if the custom css scrollbar styles affect the
 // scrollbar within the desired range then we assume it looks correct,
 // otherwise we need to add additional padding to account for the scrollbar
-const padScrollbar = (() => {
-  let el = document.createElement('div');
-  el.className = styles.testStyles;
-  document.body.appendChild(el);
-  const difference = el.offsetWidth - el.clientWidth;
-  const retValue = !(difference > 0 && difference <= 11);
-  document.body.removeChild(el);
-  el = null;
-  return retValue;
-})();
 
-class App extends Component {
-  render() {
-    return (
-      <div className={classNames(styles.container, {[styles.padScrollbar]: padScrollbar})}>
-        <div className={styles.padding}>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-          <div className={styles.item}>An Item</div>
-        </div>
-      </div>
-    );
-  }
-}
+export default () => {
+  const ref = useRef(null);
+  const [size, setSize] = useState(ScrollbarSizes.AUTO);
 
-export default App;
+  useEffect(() => {
+    const {current} = ref;
+    console.log('current imerative api is', current);
+  });
+
+  return (
+    <>
+      <select value={size} onChange={({currentTarget}) => setSize(currentTarget.value)} className={styles.select}>
+        {Object.keys(ScrollbarSizes).map(size => (
+          <option value={size} key={size}>
+            {size}
+          </option>
+        ))}
+      </select>
+      <Scroller
+        ref={ref}
+        className={classNames(styles.container, {
+          [styles.thin]: size === ScrollbarSizes.THIN,
+          [styles.auto]: size === ScrollbarSizes.AUTO,
+        })}
+        type={size}
+        fade>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+        <div className={styles.item}>An Item</div>
+      </Scroller>
+    </>
+  );
+};
