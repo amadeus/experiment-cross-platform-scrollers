@@ -20,7 +20,7 @@ export default () => {
 
   useEffect(() => {
     const {current} = ref;
-    console.log('current imerative api is', current);
+    console.log('current imperative api is', current);
   });
 
   return (
