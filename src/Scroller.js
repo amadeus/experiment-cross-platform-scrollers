@@ -1,83 +1,128 @@
-import React, {useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef} from 'react';
+// @flow strict
+import React, {useRef, useLayoutEffect, type Node} from 'react';
 import classNames from 'classnames';
+import typeStyles from './ScrollbarTypes.module.css';
 import styles from './Scroller.module.css';
 
-export const ScrollbarSizes = Object.freeze({
-  NONE: 'NONE',
-  THIN: 'THIN',
-  AUTO: 'AUTO',
+export const Themes = Object.freeze({
+  THICC: 'THICC',
+  THINN: 'THINN',
+  NONEE: 'NONEE',
 });
 
-const getScrollbarWidth = (() => {
-  const Widths = {};
+type ThemeSpec = {|
+  key: string,
+  className: string,
+  verticalSize: number,
+  horizontalSize: number,
+|};
+
+export const ThemeSpecs: {[string]: ThemeSpec} = {};
+
+export function registerTheme(key: string, className: string) {
+  const {body} = document;
+  if (body == null) {
+    throw new Error('Scroller.registerTheme: This file must be sourced after the body has loaded');
+  }
+
   let el = document.createElement('div');
   let anotherEl = document.createElement('div');
   anotherEl.style.width = '800px';
   anotherEl.style.height = '800px';
   el.appendChild(anotherEl);
-  document.body.appendChild(el);
+  body.appendChild(el);
+  el.className = classNames(styles.testStyles, className);
 
-  // AUTO
-  el.className = classNames(styles.testStyles, styles.auto);
-  Widths[ScrollbarSizes.AUTO] = el.offsetWidth - el.clientWidth;
-
-  // THIN
-  el.className = classNames(styles.testStyles, styles.thin);
-  Widths[ScrollbarSizes.THIN] = el.offsetWidth - el.clientWidth;
-
-  // NONE
-  el.className = classNames(styles.testStyles, styles.none);
-  Widths[ScrollbarSizes.NONE] = el.offsetWidth - el.clientWidth;
-
-  document.body.removeChild(el);
-  el = null;
-  anotherEl = null;
-  console.log('browser detected scrollbar sizes', Widths);
-  return type => Widths[type];
-})();
-
-function cleanupPadding(ref, type) {
-  const {current} = ref;
-  if (current == null) {
-    return;
-  }
-  current.style.paddingRight = '';
-  const computedStyle = window.getComputedStyle(current);
-  const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
-  const scrollbarWidth = getScrollbarWidth(type);
-  current.style.paddingRight = `${Math.max(0, paddingRight - scrollbarWidth)}px`;
+  ThemeSpecs[key] = Object.freeze({
+    key,
+    className,
+    verticalSize: el.offsetWidth - el.clientWidth,
+    horizontalSize: el.offsetHeight - el.clientHeight,
+  });
 }
 
-function Scroller({children, className, type, fade = false}, ref) {
-  const scroller = useRef(null);
+registerTheme(Themes.NONEE, typeStyles.nonee);
+registerTheme(Themes.THINN, typeStyles.thin);
+registerTheme(Themes.THICC, typeStyles.thic);
+console.log(ThemeSpecs);
 
-  // Fix side padding
-  useLayoutEffect(() => cleanupPadding(scroller, type), [type, className]);
+export const Orientations = Object.freeze({
+  VERTICAL: (styles.orientationVertical: 'VERTICAL'),
+  HORIZONTAL: (styles.orientationHorizontal: 'HORIZONTAL'),
+});
 
-  // Fixes for FF and Edge - bottom padding
-  // const [paddingBottom, setPaddingBottom] = useState(null);
-  // useLayoutEffect(() => {
-  //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
-  //   setPaddingBottom(paddingBottom);
-  // })
+function hasVerticalOrientation(orientation: $Values<typeof Orientations>): boolean {
+  return orientation === Orientations.VERTICAL;
+}
 
-  // Scroller API - fill out with more features
-  useImperativeHandle(ref, () => ({getScrollerNode: () => scroller.current}), []);
+function hasHorizontalOrientation(orientation: $Values<typeof Orientations>): boolean {
+  return orientation === Orientations.HORIZONTAL;
+}
 
+function cleanupPaddings(
+  scrollerRef: {|current: HTMLDivElement | null|},
+  paddingRef: {|current: HTMLDivElement | null|},
+  orientation: $Values<typeof Orientations> = Orientations.VERTICAL,
+  specs: ThemeSpec
+) {
+  const {current: scroller} = scrollerRef;
+  if (scroller == null) {
+    return;
+  }
+  const computedStyle = window.getComputedStyle(scroller);
+  scroller.style.paddingRight = '';
+  scroller.style.paddingBottom = '';
+  if (hasVerticalOrientation(orientation)) {
+    const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
+    const scrollbarWidth = specs.verticalSize;
+    scroller.style.paddingRight = `${Math.max(0, paddingRight - scrollbarWidth)}px`;
+    const {current} = paddingRef;
+    if (current != null) {
+      current.style.height = `${parseInt(computedStyle.getPropertyValue('padding-bottom'), 10)}px`;
+      scroller.style.paddingBottom = '0';
+    }
+  }
+  if (hasHorizontalOrientation(orientation)) {
+    const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
+    const scrollbarHeight = specs.horizontalSize;
+    scroller.style.paddingBottom = `${Math.max(0, paddingBottom - scrollbarHeight)}px`;
+    const {current} = paddingRef;
+    if (current) {
+      current.style.width = `${parseInt(computedStyle.getPropertyValue('padding-right'), 10)}px`;
+      scroller.style.paddingRight = '0';
+    }
+  }
+}
+
+type ScrollerProps = {|
+  children: Node,
+  theme: string,
+  fade?: boolean,
+  orientation?: $Values<typeof Orientations>,
+  className?: ?string,
+|};
+
+function Scroller({children, theme, className, fade = false, orientation = Orientations.VERTICAL}: ScrollerProps) {
+  const scroller = useRef<HTMLDivElement | null>(null);
+  const paddingRef = useRef<HTMLDivElement | null>(null);
+  const specs = ThemeSpecs[theme];
+  if (specs == null) {
+    throw new Error(`Scroller: Invalid theme specified: ${theme}`);
+  }
+  useLayoutEffect(() => cleanupPaddings(scroller, paddingRef, orientation, specs), [specs, orientation, className]);
   return (
     <div
       ref={scroller}
-      className={classNames(styles.container, className, {
-        [styles.none]: type === ScrollbarSizes.NONE,
-        [styles.thin]: type === ScrollbarSizes.THIN,
-        [styles.auto]: type === ScrollbarSizes.AUTO,
+      className={classNames(className, {
+        [styles.container]: true,
+        [specs.className]: true,
+        [orientation]: true,
         [styles.fade]: fade,
       })}>
       {children}
-      {/* This is an FF and Edge fix, and not sure if we should include it */}
-      {/* <div className={styles.padding} style={{height: paddingBottom}} /> */}
+      <div ref={paddingRef} className={styles.scrollablePadding} />
     </div>
   );
 }
 
-export default forwardRef(Scroller);
+export default Scroller;

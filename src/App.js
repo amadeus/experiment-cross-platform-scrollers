@@ -1,7 +1,26 @@
-import React, {useState, useRef, useEffect} from 'react';
+// @flow strict
+import React, {useState} from 'react';
 import classNames from 'classnames';
-import Scroller, {ScrollbarSizes} from './Scroller';
+import Scroller, {Themes, Orientations} from './Scroller';
 import styles from './App.module.css';
+
+type SelectProps<Value> = {|
+  value: Value,
+  setValue: Value => mixed,
+  base: {[key: string]: Value, ...},
+|};
+
+function Select<Value>({value, setValue, base}: SelectProps<Value>) {
+  return (
+    <select value={value} onChange={({currentTarget}) => setValue(currentTarget.value)} className={styles.select}>
+      {Object.keys(base).map(key => (
+        <option value={base[key]} key={key}>
+          {key}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -15,55 +34,32 @@ import styles from './App.module.css';
 // otherwise we need to add additional padding to account for the scrollbar
 
 export default () => {
-  const ref = useRef(null);
-  const [size, setSize] = useState(ScrollbarSizes.THIN);
-
-  useEffect(() => {
-    const {current} = ref;
-    console.log('current imperative api is', current);
-  });
-
+  const [orientation, setOrientation] = useState<$Values<typeof Orientations>>(Orientations.VERTICAL);
+  const [theme, setTheme] = useState<$Values<typeof Themes>>(Themes.THINN);
+  const [fade, setFade] = useState<boolean>(false);
   return (
     <>
-      <select value={size} onChange={({currentTarget}) => setSize(currentTarget.value)} className={styles.select}>
-        {Object.keys(ScrollbarSizes).map(size => (
-          <option value={size} key={size}>
-            {size}
-          </option>
-        ))}
-      </select>
+      <div className={styles.tools}>
+        <Select value={orientation} setValue={setOrientation} base={Orientations} />
+        <Select value={theme} setValue={setTheme} base={Themes} />
+        <label>
+          <input type="checkbox" value={fade} onChange={({currentTarget}) => setFade(currentTarget.checked)} /> Fade
+        </label>
+      </div>
       <Scroller
-        ref={ref}
-        className={classNames(styles.container, {
-          [styles.thin]: size === ScrollbarSizes.THIN,
-          [styles.auto]: size === ScrollbarSizes.AUTO,
-        })}
-        type={size}
-        fade>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
+        fade={fade}
+        theme={theme}
+        orientation={orientation}
+        className={classNames({
+          [styles.container]: true,
+          [styles.vertical]: orientation === Orientations.VERTICAL,
+          [styles.horizontal]: orientation === Orientations.HORIZONTAL,
+        })}>
+        {new Array(25).fill(null).map((_, key) => (
+          <div className={styles.item} key={key}>
+            An Item
+          </div>
+        ))}
       </Scroller>
     </>
   );

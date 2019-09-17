@@ -1,23 +1,38 @@
+:root {
+  --thumb-color: #202225;
+  --track-color: #2f3136;
+  --thumb-border-color: #4f545c;
+  --scroller-bg: rgba(0, 0, 0, 0.1);
+}
+
 .container {
   width: 400px;
-  height: 200px;
-  background-color: #ccc;
+  height: 190px;
+  padding: 9px;
+  background-color: var(--scroller-bg);
 }
 
-.thin {
-  padding: 8px;
+.vertical.container {
+  display: flex;
+  flex-direction: column;
 }
 
-.auto {
-  padding: 0 16px;
+.horizontal.container {
+  display: flex;
+  flex-direction: row;
 }
 
 .item {
+  margin: 1px;
   padding: 5px 10px;
   background-color: rgba(0, 0, 255, 0.1);
-  margin: 1px 0 1px;
 }
 
 .select {
   margin-bottom: 8px;
+  margin-right: 8px;
+}
+
+.tools {
+  display: flex;
 }

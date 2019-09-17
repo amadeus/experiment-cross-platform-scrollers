@@ -1,39 +1,29 @@
 .container {
   position: relative;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  /* NOTE(amadeus): This is required so that background color/images bleed
+   * underneatch scrollbars on macOS */
+  background-clip: border-box;
   box-sizing: border-box;
-  background-clip: padding-box;
-
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-.padding {
-  width: 1px;
-  position: absolute;
+.orientationVertical {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.orientationHorizontal {
+  overflow-x: scroll;
+  overflow-y: hidden;
+  /* NOTE(amadeus): This is a pretty damn cool feature - I wish Chrome and FF
+   * supported it */
+  -ms-scroll-translation: vertical-to-horizontal;
+}
+
+.scrollablePadding {
   pointer-events: none;
-}
-
-.container::-webkit-scrollbar-track-piece {
-  background-color: transparent;
-}
-
-.container::-webkit-scrollbar-track {
-  background: inherit;
-}
-
-.container::-webkit-scrollbar-thumb {
-  background-clip: padding-box;
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
-.container::-webkit-scrollbar-button {
-  width: 0;
-  height: 0;
-}
-.container::-webkit-scrollbar-corner {
-  width: 0;
-  height: 0;
+  width: 1px;
+  height: 1px;
+  flex: 0 0 auto;
 }
 
 .testStyles {
@@ -42,55 +32,17 @@
   left: -999px;
   width: 400px;
   height: 400px;
-  overflow-y: scroll;
+  overflow: scroll !important;
 }
 
 .fade::-webkit-scrollbar-thumb {
   visibility: hidden;
 }
+
 .fade:hover::-webkit-scrollbar-thumb {
   visibility: visible;
 }
 
-.fade {
-  scrollbar-color: transparent transparent;
-  /* may not be worth Edge support since it becomes chromium soon */
-  /* -ms-overflow-style: none; */
-}
-.fade:hover {
-  scrollbar-color: rgba(0, 0, 0, 0.2) #ccc;
-  /* -ms-overflow-style: scrollbar; */
-}
-
-.auto {
-  scrollbar-width: auto;
-}
-
-.auto::-webkit-scrollbar {
-  width: 16px;
-  /* height: 16px; */
-}
-.auto::-webkit-scrollbar-thumb {
-  border: 4px solid transparent;
-  border-radius: 8px;
-}
-
-.none {
-  scrollbar-width: none;
-}
-.none::-webkit-scrollbar {
-  width: 0;
-}
-
-.thin {
-  scrollbar-width: thin;
-}
-.thin::-webkit-scrollbar {
-  width: 8px;
-  /* height: 8px; */
-}
-.thin::-webkit-scrollbar-thumb {
-  width: 4px;
-  border-radius: 4px;
-  border: 2px solid transparent;
+.fade:not(:hover) {
+  scrollbar-color: transparent transparent !important;
 }
