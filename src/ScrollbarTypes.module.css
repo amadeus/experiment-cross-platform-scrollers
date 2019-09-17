@@ -13,7 +13,7 @@
 .thin:hover {
   /* Firefox Styles */
   scrollbar-width: thin;
-  scrollbar-color: var(--thumb-color) transparent;
+  scrollbar-color: var(--background-floating) transparent;
 
   /* Old Edge Styles */
   -ms-overflow-style: none;
@@ -44,7 +44,7 @@
   border: 2px solid transparent;
   border-radius: 4px;
   background-clip: padding-box;
-  background-color: var(--thumb-color);
+  background-color: var(--background-floating);
 }
 
 .thin::-webkit-resizer {
@@ -58,7 +58,7 @@
   scrollbar-width: auto;
   /* NOTE(amadeus): We will have to probably play around with various colors to
    * find something that looks right */
-  scrollbar-color: var(--thumb-color) var(--track-color);
+  scrollbar-color: var(--background-tertiary) var(--background-secondary);
 }
 
 /* Chrome Styles */
@@ -80,7 +80,7 @@
 
 .thic::-webkit-scrollbar-track {
   display: block;
-  background-color: var(--track-color);
+  background-color: var(--background-secondary);
   border-radius: 6px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -89,9 +89,9 @@
 .thic::-webkit-scrollbar-thumb {
   border-radius: 8px;
   width: 8px;
-  border: 2px solid var(--thumb-border-color);
+  border: 2px solid var(--background-primary);
   background-clip: border-box;
-  background-color: var(--thumb-color);
+  background-color: var(--background-tertiary);
 }
 
 .thic::-webkit-resizer {
