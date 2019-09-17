@@ -58,7 +58,10 @@
   scrollbar-width: auto;
   /* NOTE(amadeus): We will have to probably play around with various colors to
    * find something that looks right */
+  /* NOTE(amadeus): This one looks best on windows firefox */
   scrollbar-color: var(--background-tertiary) var(--background-secondary);
+  /* NOTE(amadeus): This style looks best on macOS firefox */
+  /* scrollbar-color: var(--background-tertiary) transparent; */
 }
 
 /* Chrome Styles */
