@@ -13,7 +13,7 @@
 .thin:hover {
   /* Firefox Styles */
   scrollbar-width: thin;
-  scrollbar-color: var(--background-floating) transparent;
+  scrollbar-color: var(--background-tertiary) transparent;
 
   /* Old Edge Styles */
   -ms-overflow-style: none;
@@ -44,7 +44,7 @@
   border: 2px solid transparent;
   border-radius: 4px;
   background-clip: padding-box;
-  background-color: var(--background-floating);
+  background-color: var(--background-tertiary);
 }
 
 .thin::-webkit-resizer {
@@ -92,8 +92,8 @@
 .thic::-webkit-scrollbar-thumb {
   border-radius: 8px;
   width: 8px;
-  border: 2px solid var(--background-primary);
-  background-clip: border-box;
+  border: 2px solid transparent;
+  background-clip: padding-box;
   background-color: var(--background-tertiary);
 }
 
