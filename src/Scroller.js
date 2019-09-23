@@ -4,12 +4,6 @@ import classNames from 'classnames';
 import typeStyles from './ScrollbarTypes.module.css';
 import styles from './Scroller.module.css';
 
-export const Themes = Object.freeze({
-  THICC: 'THICC',
-  THINN: 'THINN',
-  NONEE: 'NONEE',
-});
-
 type ThemeSpec = {|
   key: string,
   className: string,
@@ -17,7 +11,19 @@ type ThemeSpec = {|
   horizontalSize: number,
 |};
 
-export const ThemeSpecs: {[string]: ThemeSpec} = {};
+const ThemeSpecs: {[string]: ThemeSpec} = {};
+
+// App specific registration codez
+export const Themes = Object.freeze({
+  THICC: 'THICC',
+  THINN: 'THINN',
+  NONEE: 'NONEE',
+});
+
+registerTheme(Themes.NONEE, typeStyles.nonee);
+registerTheme(Themes.THINN, typeStyles.thin);
+registerTheme(Themes.THICC, typeStyles.thic);
+console.log(ThemeSpecs);
 
 export function registerTheme(key: string, className: string) {
   const {body} = document;
@@ -40,11 +46,6 @@ export function registerTheme(key: string, className: string) {
     horizontalSize: el.offsetHeight - el.clientHeight,
   });
 }
-
-registerTheme(Themes.NONEE, typeStyles.nonee);
-registerTheme(Themes.THINN, typeStyles.thin);
-registerTheme(Themes.THICC, typeStyles.thic);
-console.log(ThemeSpecs);
 
 export const Orientations = Object.freeze({
   VERTICAL: (styles.orientationVertical: 'VERTICAL'),
