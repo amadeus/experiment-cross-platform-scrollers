@@ -1,6 +1,6 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
 import classNames from 'classnames';
-import Scroller, {ScrollbarSizes} from './Scroller';
+import Scroller, {ScrollbarSizes, ScrollerRef} from './Scroller';
 import styles from './App.module.css';
 
 // There are a few various contexts we need to be able to support
@@ -15,22 +15,36 @@ import styles from './App.module.css';
 // otherwise we need to add additional padding to account for the scrollbar
 
 export default () => {
-  const ref = useRef(null);
-  const [size, setSize] = useState(ScrollbarSizes.THIN);
+  const ref = useRef<ScrollerRef>(null);
+  const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
+  const handleChange = useCallback(({currentTarget: {value}}) => {
+    switch (value) {
+      case ScrollbarSizes.AUTO:
+      case ScrollbarSizes.THIN:
+      case ScrollbarSizes.NONE:
+        setSize(value);
+    }
+  }, []);
 
   useEffect(() => {
     const {current} = ref;
     console.log('current imperative api is', current);
   });
 
+  const selectChildren = useMemo(
+    () =>
+      Object.keys(ScrollbarSizes).map(size => (
+        <option value={size} key={size}>
+          {size}
+        </option>
+      )),
+    []
+  );
+
   return (
     <>
-      <select value={size} onChange={({currentTarget}) => setSize(currentTarget.value)} className={styles.select}>
-        {Object.keys(ScrollbarSizes).map(size => (
-          <option value={size} key={size}>
-            {size}
-          </option>
-        ))}
+      <select value={size} onChange={handleChange} className={styles.select}>
+        {selectChildren}
       </select>
       <Scroller
         ref={ref}

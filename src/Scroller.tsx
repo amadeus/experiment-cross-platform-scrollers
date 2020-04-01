@@ -1,15 +1,26 @@
-import React, {useState, useRef, useLayoutEffect, useImperativeHandle, forwardRef} from 'react';
+import React, {useRef, useLayoutEffect, useImperativeHandle, forwardRef} from 'react';
 import classNames from 'classnames';
 import styles from './Scroller.module.css';
 
-export const ScrollbarSizes = Object.freeze({
-  NONE: 'NONE',
-  THIN: 'THIN',
-  AUTO: 'AUTO',
-});
+export type ScrollerProps = {
+  className?: string | null | undefined;
+  children: React.ReactNode;
+  type: ScrollbarSizes;
+  fade?: boolean;
+};
+
+export type ScrollerRef = {
+  getScrollerNode: () => HTMLDivElement | null;
+};
+
+export enum ScrollbarSizes {
+  NONE = 'NONE',
+  THIN = 'THIN',
+  AUTO = 'AUTO',
+}
 
 const getScrollbarWidth = (() => {
-  const Widths = {};
+  const Widths: Record<string, number> = {};
   let el = document.createElement('div');
   let anotherEl = document.createElement('div');
   anotherEl.style.width = '800px';
@@ -30,13 +41,15 @@ const getScrollbarWidth = (() => {
   Widths[ScrollbarSizes.NONE] = el.offsetWidth - el.clientWidth;
 
   document.body.removeChild(el);
+  // @ts-ignore
   el = null;
+  // @ts-ignore
   anotherEl = null;
   console.log('browser detected scrollbar sizes', Widths);
-  return type => Widths[type];
+  return (type: ScrollbarSizes) => Widths[type];
 })();
 
-function cleanupPadding(ref, type) {
+function cleanupPadding(ref: React.RefObject<HTMLDivElement>, type: ScrollbarSizes) {
   const {current} = ref;
   if (current == null) {
     return;
@@ -48,13 +61,13 @@ function cleanupPadding(ref, type) {
   current.style.paddingRight = `${Math.max(0, paddingRight - scrollbarWidth)}px`;
 }
 
-function Scroller({children, className, type, fade = false}, ref) {
-  const scroller = useRef(null);
+function Scroller({children, className, type, fade = false}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
+  const scroller = useRef<HTMLDivElement>(null);
 
   // Fix side padding
   useLayoutEffect(() => cleanupPadding(scroller, type), [type, className]);
 
-  // Fixes for FF and Edge - bottom padding
+  // Fixes for FF and Edge - bottom padding - do I still want to do this?
   // const [paddingBottom, setPaddingBottom] = useState(null);
   // useLayoutEffect(() => {
   //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
