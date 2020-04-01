@@ -21,8 +21,8 @@ export enum ScrollbarSizes {
 
 const getScrollbarWidth = (() => {
   const Widths: Record<string, number> = {};
-  let el = document.createElement('div');
-  let anotherEl = document.createElement('div');
+  let el: HTMLDivElement | null = document.createElement('div');
+  let anotherEl: HTMLDivElement | null = document.createElement('div');
   anotherEl.style.width = '800px';
   anotherEl.style.height = '800px';
   el.appendChild(anotherEl);
@@ -41,9 +41,7 @@ const getScrollbarWidth = (() => {
   Widths[ScrollbarSizes.NONE] = el.offsetWidth - el.clientWidth;
 
   document.body.removeChild(el);
-  // @ts-ignore
   el = null;
-  // @ts-ignore
   anotherEl = null;
   console.log('browser detected scrollbar sizes', Widths);
   return (type: ScrollbarSizes) => Widths[type];
