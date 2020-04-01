@@ -80,7 +80,7 @@ function Scroller({children, className, type, fade = false}: ScrollerProps, ref:
   return (
     <div
       ref={scroller}
-      className={classNames(styles.container, className, {
+      className={classNames(className, styles.container, {
         [styles.none]: type === ScrollbarSizes.NONE,
         [styles.thin]: type === ScrollbarSizes.THIN,
         [styles.auto]: type === ScrollbarSizes.AUTO,
