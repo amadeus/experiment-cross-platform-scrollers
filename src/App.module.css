@@ -1,6 +1,7 @@
 .container {
-  width: 400px;
-  height: 200px;
+  position: relative;
+  width: 40%;
+  height: 15%;
   background-color: #ccc;
 }
 
@@ -19,5 +20,11 @@
 }
 
 .select {
-  margin-bottom: 8px;
+  display: block;
+}
+
+.tools {
+  position: fixed;
+  top: 20px;
+  left: 20px;
 }

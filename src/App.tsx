@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
 import classNames from 'classnames';
 import Scroller, {ScrollbarSizes, ScrollerRef} from './Scroller';
+import generateRow from './generateRow';
 import styles from './App.module.css';
 
 // There are a few various contexts we need to be able to support
@@ -26,10 +27,17 @@ export default () => {
     }
   }, []);
 
+  const [children, setChildren] = useState(() => new Array(30).fill(null).map((_, index) => generateRow(index)));
+  const handleClick = useCallback(() => {
+    setChildren(children => [...children, generateRow(children.length)]);
+  }, []);
+
   useEffect(() => {
     const {current} = ref;
+    // @ts-ignore
+    window.DERP = current;
     console.log('current imperative api is', current);
-  });
+  }, []);
 
   const selectChildren = useMemo(
     () =>
@@ -43,9 +51,12 @@ export default () => {
 
   return (
     <>
-      <select value={size} onChange={handleChange} className={styles.select}>
-        {selectChildren}
-      </select>
+      <div className={styles.tools}>
+        <select value={size} onChange={handleChange} className={styles.select}>
+          {selectChildren}
+        </select>
+        <button onClick={handleClick}>Add Item</button>
+      </div>
       <Scroller
         ref={ref}
         className={classNames(styles.container, {
@@ -54,30 +65,7 @@ export default () => {
         })}
         type={size}
         fade>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
-        <div className={styles.item}>An Item</div>
+        {children}
       </Scroller>
     </>
   );

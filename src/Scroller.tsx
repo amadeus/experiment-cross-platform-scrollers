@@ -1,17 +1,32 @@
-import React, {useRef, useLayoutEffect, useImperativeHandle, forwardRef} from 'react';
+import React, {useRef, useLayoutEffect, useImperativeHandle, forwardRef, useCallback} from 'react';
 import classNames from 'classnames';
 import styles from './Scroller.module.css';
+
+type ScrollEvent = React.UIEvent<HTMLDivElement, UIEvent>;
+type ScrollHandler = (event: ScrollEvent) => void;
 
 export type ScrollerProps = {
   className?: string | null | undefined;
   children: React.ReactNode;
   type: ScrollbarSizes;
   fade?: boolean;
+  onScroll?: ScrollHandler;
 };
 
 export type ScrollerRef = {
   getScrollerNode: () => HTMLDivElement | null;
+  getScrollerState: () => ScrollerState;
 };
+
+export type ScrollerState = {
+  scrollTop: number;
+  scrollHeight: number;
+  offsetHeight: number;
+  dirty: boolean;
+};
+
+// @ts-ignore
+const ResizeObserver: any = window.ResizeObserver;
 
 export enum ScrollbarSizes {
   NONE = 'NONE',
@@ -59,25 +74,75 @@ function cleanupPadding(ref: React.RefObject<HTMLDivElement>, type: ScrollbarSiz
   current.style.paddingRight = `${Math.max(0, paddingRight - scrollbarWidth)}px`;
 }
 
-function Scroller({children, className, type, fade = false}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
+function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined) {
   const scroller = useRef<HTMLDivElement>(null);
+  const scrollerState = useRef<ScrollerState>({scrollTop: 0, scrollHeight: 0, offsetHeight: 0, dirty: true});
+  const handleScroll = useCallback(
+    (event: ScrollEvent) => {
+      scrollerState.current.dirty = true;
+      onScroll != null && onScroll(event);
+    },
+    [onScroll]
+  );
+  useImperativeHandle<ScrollerRef, ScrollerRef>(
+    ref,
+    (): ScrollerRef => ({
+      getScrollerNode() {
+        return scroller.current;
+      },
+      getScrollerState() {
+        const {current} = scroller;
+        if (current != null && scrollerState.current.dirty) {
+          const {scrollTop, scrollHeight, offsetHeight} = current;
+          scrollerState.current = {
+            scrollTop,
+            scrollHeight,
+            offsetHeight,
+            dirty: false,
+          };
+        }
+        return scrollerState.current;
+      },
+    }),
+    []
+  );
+  useLayoutEffect(() => {
+    if (ResizeObserver == null) {
+      return;
+    }
+    const resizeObserver = new ResizeObserver(() => {
+      scrollerState.current.dirty = true;
+    });
+    resizeObserver.observe(scroller.current);
+    return () => resizeObserver.disconnect();
+  }, []);
 
+  return {handleScroll, scroller};
+}
+
+function usePaddingFixes(
+  type: ScrollbarSizes,
+  className: string | null | undefined,
+  scroller: React.RefObject<HTMLDivElement>
+) {
   // Fix side padding
-  useLayoutEffect(() => cleanupPadding(scroller, type), [type, className]);
-
+  useLayoutEffect(() => cleanupPadding(scroller, type), [type, className, scroller]);
   // Fixes for FF and Edge - bottom padding - do I still want to do this?
   // const [paddingBottom, setPaddingBottom] = useState(null);
   // useLayoutEffect(() => {
   //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
   //   setPaddingBottom(paddingBottom);
   // })
+}
 
-  // Scroller API - fill out with more features
-  useImperativeHandle(ref, () => ({getScrollerNode: () => scroller.current}), []);
+function Scroller({children, className, type, onScroll, fade = false}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
+  const {handleScroll, scroller} = useScrollerState(ref, onScroll);
+  usePaddingFixes(type, className, scroller);
 
   return (
     <div
       ref={scroller}
+      onScroll={ref != null || onScroll != null ? handleScroll : undefined}
       className={classNames(className, styles.container, {
         [styles.none]: type === ScrollbarSizes.NONE,
         [styles.thin]: type === ScrollbarSizes.THIN,
