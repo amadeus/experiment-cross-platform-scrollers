@@ -1,8 +1,17 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
-import classNames from 'classnames';
-import Scroller, {ScrollbarSizes, ScrollerRef} from './Scroller';
+import createScroller, {ScrollerRef} from './Scroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
+
+const ScrollerNone = createScroller(styles.none);
+const ScrollerThin = createScroller(styles.thin);
+const ScrollerAuto = createScroller(styles.auto);
+
+enum ScrollbarSizes {
+  NONE = 'NONE',
+  THIN = 'THIN',
+  AUTO = 'AUTO',
+}
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -17,7 +26,7 @@ import styles from './App.module.css';
 
 export default () => {
   const ref = useRef<ScrollerRef>(null);
-  const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
+  const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.AUTO);
   const handleChange = useCallback(({currentTarget: {value}}) => {
     switch (value) {
       case ScrollbarSizes.AUTO:
@@ -49,6 +58,15 @@ export default () => {
     []
   );
 
+  let Scroller;
+  if (size === ScrollbarSizes.NONE) {
+    Scroller = ScrollerNone;
+  } else if (size === ScrollbarSizes.THIN) {
+    Scroller = ScrollerThin;
+  } else {
+    Scroller = ScrollerAuto;
+  }
+
   return (
     <>
       <div className={styles.tools}>
@@ -57,14 +75,7 @@ export default () => {
         </select>
         <button onClick={handleClick}>Add Item</button>
       </div>
-      <Scroller
-        ref={ref}
-        className={classNames(styles.container, {
-          [styles.thin]: size === ScrollbarSizes.THIN,
-          [styles.auto]: size === ScrollbarSizes.AUTO,
-        })}
-        type={size}
-        fade>
+      <Scroller ref={ref} className={styles.container}>
         {children}
       </Scroller>
     </>

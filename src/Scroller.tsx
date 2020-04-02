@@ -8,8 +8,6 @@ type ScrollHandler = (event: ScrollEvent) => void;
 export type ScrollerProps = {
   className?: string | null | undefined;
   children: React.ReactNode;
-  type: ScrollbarSizes;
-  fade?: boolean;
   onScroll?: ScrollHandler;
 };
 
@@ -28,50 +26,19 @@ export type ScrollerState = {
 // @ts-ignore
 const ResizeObserver: any = window.ResizeObserver;
 
-export enum ScrollbarSizes {
-  NONE = 'NONE',
-  THIN = 'THIN',
-  AUTO = 'AUTO',
-}
-
-const getScrollbarWidth = (() => {
-  const Widths: Record<string, number> = {};
+function getScrollbarWidth(className: string): {width: number; height: number} {
   let el: HTMLDivElement | null = document.createElement('div');
   let anotherEl: HTMLDivElement | null = document.createElement('div');
-  anotherEl.style.width = '800px';
-  anotherEl.style.height = '800px';
+  anotherEl.className = styles.testInnerStyles;
   el.appendChild(anotherEl);
   document.body.appendChild(el);
-
-  // AUTO
-  el.className = classNames(styles.testStyles, styles.auto);
-  Widths[ScrollbarSizes.AUTO] = el.offsetWidth - el.clientWidth;
-
-  // THIN
-  el.className = classNames(styles.testStyles, styles.thin);
-  Widths[ScrollbarSizes.THIN] = el.offsetWidth - el.clientWidth;
-
-  // NONE
-  el.className = classNames(styles.testStyles, styles.none);
-  Widths[ScrollbarSizes.NONE] = el.offsetWidth - el.clientWidth;
-
+  el.className = classNames(className, styles.testStyles);
+  const specs = {width: el.offsetWidth - el.clientWidth, height: el.offsetHeight - el.clientHeight};
   document.body.removeChild(el);
   el = null;
   anotherEl = null;
-  console.log('browser detected scrollbar sizes', Widths);
-  return (type: ScrollbarSizes) => Widths[type];
-})();
-
-function cleanupPadding(ref: React.RefObject<HTMLDivElement>, type: ScrollbarSizes) {
-  const {current} = ref;
-  if (current == null) {
-    return;
-  }
-  current.style.paddingRight = '';
-  const computedStyle = window.getComputedStyle(current);
-  const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
-  const scrollbarWidth = getScrollbarWidth(type);
-  current.style.paddingRight = `${Math.max(0, paddingRight - scrollbarWidth)}px`;
+  console.log('browser detected scrollbar sizes', specs);
+  return specs;
 }
 
 function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined) {
@@ -120,40 +87,43 @@ function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler |
   return {handleScroll, scroller};
 }
 
-function usePaddingFixes(
-  type: ScrollbarSizes,
-  className: string | null | undefined,
-  scroller: React.RefObject<HTMLDivElement>
-) {
-  // Fix side padding
-  useLayoutEffect(() => cleanupPadding(scroller, type), [type, className, scroller]);
-  // Fixes for FF and Edge - bottom padding - do I still want to do this?
-  // const [paddingBottom, setPaddingBottom] = useState(null);
-  // useLayoutEffect(() => {
-  //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
-  //   setPaddingBottom(paddingBottom);
-  // })
+export default function createScroller(scrollbarClassName: string = '') {
+  const specs = getScrollbarWidth(scrollbarClassName);
+
+  function cleanupPadding(ref: React.RefObject<HTMLDivElement>) {
+    const {current} = ref;
+    if (current == null) {
+      return;
+    }
+    current.style.paddingRight = '';
+    const computedStyle = window.getComputedStyle(current);
+    const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
+    current.style.paddingRight = `${Math.max(0, paddingRight - specs.width)}px`;
+  }
+
+  function usePaddingFixes(className: string | null | undefined, scroller: React.RefObject<HTMLDivElement>) {
+    // Fix side padding
+    useLayoutEffect(() => cleanupPadding(scroller), [className, scroller]);
+    // Fixes for FF and Edge - bottom padding - do I still want to do this?
+    // const [paddingBottom, setPaddingBottom] = useState(null);
+    // useLayoutEffect(() => {
+    //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
+    //   setPaddingBottom(paddingBottom);
+    // })
+  }
+
+  return forwardRef(function Scroller({children, className, onScroll}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
+    const {handleScroll, scroller} = useScrollerState(ref, onScroll);
+    usePaddingFixes(className, scroller);
+    return (
+      <div
+        ref={scroller}
+        onScroll={ref != null || onScroll != null ? handleScroll : undefined}
+        className={classNames(className, styles.container, scrollbarClassName)}>
+        {children}
+        {/* This is an FF and Edge fix, and not sure if we should include it */}
+        {/* <div className={styles.padding} style={{height: paddingBottom}} /> */}
+      </div>
+    );
+  });
 }
-
-function Scroller({children, className, type, onScroll, fade = false}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
-  const {handleScroll, scroller} = useScrollerState(ref, onScroll);
-  usePaddingFixes(type, className, scroller);
-
-  return (
-    <div
-      ref={scroller}
-      onScroll={ref != null || onScroll != null ? handleScroll : undefined}
-      className={classNames(className, styles.container, {
-        [styles.none]: type === ScrollbarSizes.NONE,
-        [styles.thin]: type === ScrollbarSizes.THIN,
-        [styles.auto]: type === ScrollbarSizes.AUTO,
-        [styles.fade]: fade,
-      })}>
-      {children}
-      {/* This is an FF and Edge fix, and not sure if we should include it */}
-      {/* <div className={styles.padding} style={{height: paddingBottom}} /> */}
-    </div>
-  );
-}
-
-export default forwardRef(Scroller);
