@@ -26,7 +26,7 @@ enum ScrollbarSizes {
 
 export default () => {
   const ref = useRef<ScrollerRef>(null);
-  const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.AUTO);
+  const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
   const handleChange = useCallback(({currentTarget: {value}}) => {
     switch (value) {
       case ScrollbarSizes.AUTO:
