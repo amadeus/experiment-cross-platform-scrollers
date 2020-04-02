@@ -1,5 +1,4 @@
 import React, {useRef, useLayoutEffect, useImperativeHandle, forwardRef, useCallback} from 'react';
-import classNames from 'classnames';
 import styles from './Scroller.module.css';
 
 type ScrollEvent = React.UIEvent<HTMLDivElement, UIEvent>;
@@ -26,13 +25,13 @@ export type ScrollerState = {
 // @ts-ignore
 const ResizeObserver: any = window.ResizeObserver;
 
-function getScrollbarWidth(className: string): {width: number; height: number} {
+function getScrollbarWidth(className?: string): {width: number; height: number} {
   let el: HTMLDivElement | null = document.createElement('div');
   let anotherEl: HTMLDivElement | null = document.createElement('div');
   anotherEl.className = styles.testInnerStyles;
   el.appendChild(anotherEl);
   document.body.appendChild(el);
-  el.className = classNames(className, styles.testStyles);
+  el.className = [className, styles.testStyles].join(' ');
   const specs = {width: el.offsetWidth - el.clientWidth, height: el.offsetHeight - el.clientHeight};
   document.body.removeChild(el);
   el = null;
@@ -87,7 +86,7 @@ function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler |
   return {handleScroll, scroller};
 }
 
-export default function createScroller(scrollbarClassName: string = '') {
+export default function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarWidth(scrollbarClassName);
 
   function usePaddingFixes(className: string | null | undefined, scroller: React.RefObject<HTMLDivElement>) {
@@ -115,11 +114,14 @@ export default function createScroller(scrollbarClassName: string = '') {
   return forwardRef(function Scroller({children, className, onScroll}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
     const {handleScroll, scroller} = useScrollerState(ref, onScroll);
     const bottomRef = usePaddingFixes(className, scroller);
+    const classes = [styles.container];
+    scrollbarClassName != null && classes.push(scrollbarClassName);
+    className != null && classes.push(className);
     return (
       <div
         ref={scroller}
         onScroll={ref != null || onScroll != null ? handleScroll : undefined}
-        className={classNames(className, styles.container, scrollbarClassName)}>
+        className={classes.join(' ')}>
         {children}
         {/* This is an FF and Edge fix, and not sure if we should include it */}
         <div aria-hidden className={styles.padding} ref={bottomRef} />
