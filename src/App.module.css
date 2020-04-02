@@ -59,7 +59,7 @@
 
 .auto {
   composes: scrollbar;
-  padding: 0 16px;
+  padding: 16px;
   scrollbar-width: auto;
 }
 

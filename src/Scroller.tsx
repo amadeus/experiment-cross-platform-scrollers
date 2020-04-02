@@ -90,31 +90,31 @@ function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler |
 export default function createScroller(scrollbarClassName: string = '') {
   const specs = getScrollbarWidth(scrollbarClassName);
 
-  function cleanupPadding(ref: React.RefObject<HTMLDivElement>) {
-    const {current} = ref;
-    if (current == null) {
-      return;
-    }
-    current.style.paddingRight = '';
-    const computedStyle = window.getComputedStyle(current);
-    const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
-    current.style.paddingRight = `${Math.max(0, paddingRight - specs.width)}px`;
-  }
-
   function usePaddingFixes(className: string | null | undefined, scroller: React.RefObject<HTMLDivElement>) {
-    // Fix side padding
-    useLayoutEffect(() => cleanupPadding(scroller), [className, scroller]);
-    // Fixes for FF and Edge - bottom padding - do I still want to do this?
-    // const [paddingBottom, setPaddingBottom] = useState(null);
-    // useLayoutEffect(() => {
-    //   const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
-    //   setPaddingBottom(paddingBottom);
-    // })
+    const bottomRef = useRef<HTMLDivElement>(null);
+    useLayoutEffect(
+      () => {
+        const {current} = scroller;
+        if (current == null) {
+          return;
+        }
+        const computedStyle = window.getComputedStyle(current);
+        const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
+        current.style.paddingRight = `${Math.max(0, paddingRight - specs.width)}px`;
+
+        const {current: _current} = bottomRef;
+        if (_current != null) {
+          _current.style.height = computedStyle.getPropertyValue('padding-bottom');
+        }
+      },
+      [className, scroller]
+    );
+    return bottomRef;
   }
 
   return forwardRef(function Scroller({children, className, onScroll}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
     const {handleScroll, scroller} = useScrollerState(ref, onScroll);
-    usePaddingFixes(className, scroller);
+    const bottomRef = usePaddingFixes(className, scroller);
     return (
       <div
         ref={scroller}
@@ -122,7 +122,7 @@ export default function createScroller(scrollbarClassName: string = '') {
         className={classNames(className, styles.container, scrollbarClassName)}>
         {children}
         {/* This is an FF and Edge fix, and not sure if we should include it */}
-        {/* <div className={styles.padding} style={{height: paddingBottom}} /> */}
+        <div aria-hidden className={styles.padding} ref={bottomRef} />
       </div>
     );
   });
