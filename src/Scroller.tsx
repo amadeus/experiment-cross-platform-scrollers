@@ -24,8 +24,7 @@ export type ScrollerState = {
   dirty: boolean;
 };
 
-// @ts-ignore
-const ResizeObserver: any = window.ResizeObserver;
+const {ResizeObserver} = window;
 
 function getScrollbarWidth(className?: string): {width: number; height: number} {
   let el: HTMLDivElement | null = document.createElement('div');
@@ -42,54 +41,69 @@ function getScrollbarWidth(className?: string): {width: number; height: number} 
   return specs;
 }
 
-function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined) {
-  const scroller = useRef<HTMLDivElement>(null);
-  const scrollerState = useRef<ScrollerState>({scrollTop: 0, scrollHeight: 0, offsetHeight: 0, dirty: true});
-  const handleScroll = useCallback(
-    (event: ScrollEvent) => {
-      scrollerState.current.dirty = true;
-      onScroll != null && onScroll(event);
-    },
-    [onScroll]
-  );
-  useImperativeHandle<ScrollerRef, ScrollerRef>(
-    ref,
-    (): ScrollerRef => ({
-      getScrollerNode() {
-        return scroller.current;
-      },
-      getScrollerState() {
-        const {current} = scroller;
-        if (current != null && scrollerState.current.dirty) {
-          const {scrollTop, scrollHeight, offsetHeight} = current;
-          scrollerState.current = {
-            scrollTop,
-            scrollHeight,
-            offsetHeight,
-            dirty: false,
-          };
-        }
-        return scrollerState.current;
-      },
-    }),
-    []
-  );
-  useLayoutEffect(() => {
-    if (ResizeObserver == null) {
-      return;
-    }
-    const resizeObserver = new ResizeObserver(() => {
-      scrollerState.current.dirty = true;
-    });
-    resizeObserver.observe(scroller.current);
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  return {handleScroll, scroller};
-}
-
 export default function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarWidth(scrollbarClassName);
+  const scrollerStates = new Map<Element, React.RefObject<ScrollerState>>();
+  const resizeObserver =
+    ResizeObserver != null
+      ? new ResizeObserver(entries => {
+          entries.forEach(({target}) => {
+            const state = scrollerStates.get(target);
+            if (state == null || state.current == null) {
+              return;
+            }
+            state.current.dirty = true;
+          });
+        })
+      : null;
+
+  function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined) {
+    const scroller = useRef<HTMLDivElement>(null);
+    const scrollerState = useRef<ScrollerState>({scrollTop: 0, scrollHeight: 0, offsetHeight: 0, dirty: true});
+    const handleScroll = useCallback(
+      (event: ScrollEvent) => {
+        scrollerState.current.dirty = true;
+        onScroll != null && onScroll(event);
+      },
+      [onScroll]
+    );
+    useImperativeHandle<ScrollerRef, ScrollerRef>(
+      ref,
+      (): ScrollerRef => ({
+        getScrollerNode() {
+          return scroller.current;
+        },
+        getScrollerState() {
+          const {current} = scroller;
+          if (current != null && scrollerState.current.dirty) {
+            const {scrollTop, scrollHeight, offsetHeight} = current;
+            scrollerState.current = {
+              scrollTop,
+              scrollHeight,
+              offsetHeight,
+              dirty: false,
+            };
+          }
+          return scrollerState.current;
+        },
+      }),
+      []
+    );
+    useLayoutEffect(() => {
+      const {current} = scroller;
+      if (resizeObserver == null || current == null) {
+        return;
+      }
+      scrollerStates.set(current, scrollerState);
+      resizeObserver.observe(current);
+      return () => {
+        resizeObserver.unobserve(current);
+        scrollerStates.delete(current);
+      };
+    }, []);
+
+    return {handleScroll, scroller};
+  }
 
   function usePaddingFixes(
     orientation: 'vertical' | 'horizontal' | 'manual',

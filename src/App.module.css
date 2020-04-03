@@ -8,9 +8,10 @@
 }
 
 .container {
+  box-sizing: border-box;
   position: relative;
   width: 40%;
-  height: 15%;
+  height: 30%;
   background-color: #ccc;
   margin: 4px;
 }
