@@ -1,14 +1,40 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+}
+
 .container {
   position: relative;
   width: 40%;
   height: 15%;
   background-color: #ccc;
+  margin: 4px;
+}
+
+.horizontalContainer {
+  composes: container;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
 }
 
 .item {
   padding: 5px 10px;
   background-color: rgba(0, 0, 255, 0.1);
   margin: 1px 0 1px;
+}
+
+.horizontalContainer .item + .item {
+  margin-left: 1px;
+}
+
+[dir='rtl'] .horizontalContainer .item + .item {
+  margin-right: 1px;
+  margin-left: 0;
 }
 
 .select {

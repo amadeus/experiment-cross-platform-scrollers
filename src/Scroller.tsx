@@ -6,6 +6,8 @@ type ScrollHandler = (event: ScrollEvent) => void;
 
 export type ScrollerProps = {
   className?: string | null | undefined;
+  dir?: 'rtl' | 'ltr';
+  orientation?: 'vertical' | 'horizontal' | 'manual';
   children: React.ReactNode;
   onScroll?: ScrollHandler;
 };
@@ -89,32 +91,55 @@ function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler |
 export default function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarWidth(scrollbarClassName);
 
-  function usePaddingFixes(className: string | null | undefined, scroller: React.RefObject<HTMLDivElement>) {
-    const bottomRef = useRef<HTMLDivElement>(null);
+  function usePaddingFixes(
+    orientation: 'vertical' | 'horizontal' | 'manual',
+    dir: 'ltr' | 'rtl',
+    className: string | null | undefined,
+    scroller: React.RefObject<HTMLDivElement>
+  ) {
+    const spacingRef = useRef<HTMLDivElement>(null);
     useLayoutEffect(
       () => {
         const {current} = scroller;
-        if (current == null) {
+        if (current == null || orientation === 'manual') {
           return;
         }
         const computedStyle = window.getComputedStyle(current);
-        const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
-        current.style.paddingRight = `${Math.max(0, paddingRight - specs.width)}px`;
-
-        const {current: _current} = bottomRef;
-        if (_current != null) {
-          _current.style.height = computedStyle.getPropertyValue('padding-bottom');
+        if (orientation === 'vertical') {
+          if (dir === 'rtl') {
+            const paddingLeft = parseInt(computedStyle.getPropertyValue('padding-left'), 10);
+            current.style.paddingLeft = `${Math.max(0, paddingLeft - specs.width)}px`;
+            current.style.paddingRight = '';
+          } else {
+            const paddingRight = parseInt(computedStyle.getPropertyValue('padding-right'), 10);
+            current.style.paddingRight = `${Math.max(0, paddingRight - specs.width)}px`;
+            current.style.paddingLeft = '';
+          }
+          const {current: _current} = spacingRef;
+          if (_current != null) {
+            _current.style.height = computedStyle.getPropertyValue('padding-bottom');
+          }
+        } else {
+          const paddingBottom = parseInt(computedStyle.getPropertyValue('padding-bottom'), 10);
+          current.style.paddingBottom = `${Math.max(0, paddingBottom - specs.height)}px`;
+          const {current: _current} = spacingRef;
+          if (_current != null) {
+            _current.style.width = computedStyle.getPropertyValue('padding-left');
+          }
         }
       },
-      [className, scroller]
+      [orientation, dir, className, scroller]
     );
-    return bottomRef;
+    return spacingRef;
   }
 
-  return forwardRef(function Scroller({children, className, onScroll}: ScrollerProps, ref: React.Ref<ScrollerRef>) {
+  return forwardRef(function Scroller(
+    {children, className, onScroll, dir = 'ltr', orientation = 'vertical'}: ScrollerProps,
+    ref: React.Ref<ScrollerRef>
+  ) {
     const {handleScroll, scroller} = useScrollerState(ref, onScroll);
-    const bottomRef = usePaddingFixes(className, scroller);
-    const classes = [styles.container];
+    const spacingRef = usePaddingFixes(orientation, dir, className, scroller);
+    const classes = [styles.container, orientation === 'vertical' ? styles.vertical : styles.horizontal];
     scrollbarClassName != null && classes.push(scrollbarClassName);
     className != null && classes.push(className);
     return (
@@ -123,8 +148,7 @@ export default function createScroller(scrollbarClassName?: string) {
         onScroll={ref != null || onScroll != null ? handleScroll : undefined}
         className={classes.join(' ')}>
         {children}
-        {/* This is an FF and Edge fix, and not sure if we should include it */}
-        <div aria-hidden className={styles.padding} ref={bottomRef} />
+        {orientation !== 'manual' && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>
     );
   });

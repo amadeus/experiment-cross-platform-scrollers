@@ -24,15 +24,23 @@ enum ScrollbarSizes {
 // scrollbar within the desired range then we assume it looks correct,
 // otherwise we need to add additional padding to account for the scrollbar
 
-export default () => {
+export default function App() {
   const ref = useRef<ScrollerRef>(null);
   const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
-  const handleChange = useCallback(({currentTarget: {value}}) => {
+  const [dir, setDir] = useState<'ltr' | 'rtl'>('ltr');
+  const handleScrollbarChange = useCallback(({currentTarget: {value}}) => {
     switch (value) {
       case ScrollbarSizes.AUTO:
       case ScrollbarSizes.THIN:
       case ScrollbarSizes.NONE:
         setSize(value);
+    }
+  }, []);
+  const handleDirChange = useCallback(({currentTarget: {value}}) => {
+    switch (value) {
+      case 'ltr':
+      case 'rtl':
+        setDir(value);
     }
   }, []);
 
@@ -68,16 +76,23 @@ export default () => {
   }
 
   return (
-    <>
+    <div dir={dir} className={styles.wrapper}>
       <div className={styles.tools}>
-        <select value={size} onChange={handleChange} className={styles.select}>
+        <select value={size} onChange={handleScrollbarChange} className={styles.select}>
           {selectChildren}
+        </select>
+        <select value={dir} onChange={handleDirChange} className={styles.select}>
+          <option value="ltr">LTR</option>
+          <option value="rtl">RTL</option>
         </select>
         <button onClick={handleClick}>Add Item</button>
       </div>
-      <Scroller ref={ref} className={styles.container}>
+      <Scroller ref={ref} className={styles.container} dir={dir}>
         {children}
       </Scroller>
-    </>
+      <Scroller ref={ref} className={styles.horizontalContainer} orientation="horizontal">
+        {children}
+      </Scroller>
+    </div>
   );
-};
+}

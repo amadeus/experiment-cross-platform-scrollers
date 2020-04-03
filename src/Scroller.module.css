@@ -3,10 +3,26 @@
   background-clip: padding-box;
 }
 
+.vertical {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.horizontal {
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
 .padding {
-  width: 1px;
   position: absolute;
   pointer-events: none;
+  min-height: 1px;
+  min-width: 1px;
+  flex: 0 0 auto;
+}
+
+.horizontal .padding {
+  position: relative;
 }
 
 .testStyles {
