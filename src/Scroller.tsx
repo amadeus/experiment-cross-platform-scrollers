@@ -26,7 +26,7 @@ export type ScrollerState = {
 
 const {ResizeObserver} = window;
 
-function getScrollbarWidth(className?: string): {width: number; height: number} {
+function getScrollbarSpecs(className?: string): {width: number; height: number} {
   let el: HTMLDivElement | null = document.createElement('div');
   let anotherEl: HTMLDivElement | null = document.createElement('div');
   anotherEl.className = styles.testInnerStyles;
@@ -37,12 +37,12 @@ function getScrollbarWidth(className?: string): {width: number; height: number} 
   document.body.removeChild(el);
   el = null;
   anotherEl = null;
-  console.log('browser detected scrollbar sizes', specs);
+  console.log('browser detected scrollbar specs', specs);
   return specs;
 }
 
 export default function createScroller(scrollbarClassName?: string) {
-  const specs = getScrollbarWidth(scrollbarClassName);
+  const specs = getScrollbarSpecs(scrollbarClassName);
   const scrollerStates = new Map<Element, React.RefObject<ScrollerState>>();
   const resizeObserver =
     ResizeObserver != null
