@@ -49,12 +49,8 @@ export default function App() {
     setChildren(children => [...children, generateRow(children.length)]);
   }, []);
 
-  useEffect(() => {
-    const {current} = ref;
-    // @ts-ignore
-    window.DERP = current;
-    console.log('current imperative api is', current);
-  }, []);
+  // @ts-ignore
+  useEffect(() => void (window.DERP = ref.current));
 
   const selectChildren = useMemo(
     () =>
@@ -90,7 +86,7 @@ export default function App() {
       <Scroller ref={ref} className={styles.container} dir={dir}>
         {children}
       </Scroller>
-      <Scroller ref={ref} className={styles.horizontalContainer} orientation="horizontal">
+      <Scroller className={styles.horizontalContainer} orientation="horizontal">
         {children}
       </Scroller>
     </div>
