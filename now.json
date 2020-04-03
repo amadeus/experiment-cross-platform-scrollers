@@ -1,15 +1,12 @@
 {
-    "version": 2,
-    "name": "ff_scroller",
-    "builds": [
-        { "src": "package.json", "use": "@now/static-build" }
-    ],
-    "routes": [
-        {"src": "^/static/(.*)", "dest": "/static/$1"},
-        {"src": "^/favicon.ico", "dest": "/favicon.ico"},
-        {"src": "^/asset-manifest.json", "dest": "/asset-manifest.json"},
-        {"src": "^/manifest.json", "dest": "/manifest.json"},
-        {"src": "^/precache-manifest.(.*)", "dest": "/precache-manifest.$1"},
-        {"src": "^/(.*)", "dest": "/index.html"}
-    ]
+  "version": 2,
+  "builds": [{"src": "package.json", "use": "@now/static-build"}],
+  "routes": [
+    {"src": "^/static/(.*)", "dest": "/static/$1"},
+    {"src": "^/favicon.ico", "dest": "/favicon.ico"},
+    {"src": "^/asset-manifest.json", "dest": "/asset-manifest.json"},
+    {"src": "^/manifest.json", "dest": "/manifest.json"},
+    {"src": "^/precache-manifest.(.*)", "dest": "/precache-manifest.$1"},
+    {"src": "^/(.*)", "dest": "/index.html"}
+  ]
 }
