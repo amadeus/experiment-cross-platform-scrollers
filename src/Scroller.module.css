@@ -1,8 +1,3 @@
-.container {
-  overflow: auto;
-  background-clip: padding-box;
-}
-
 .vertical {
   overflow-y: scroll;
   overflow-x: hidden;
@@ -11,6 +6,10 @@
 .horizontal {
   overflow-x: scroll;
   overflow-y: hidden;
+}
+
+.auto {
+  overflow: auto;
 }
 
 .padding {

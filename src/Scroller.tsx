@@ -7,7 +7,8 @@ type ScrollHandler = (event: ScrollEvent) => void;
 export type ScrollerProps = {
   className?: string | null | undefined;
   dir?: 'rtl' | 'ltr';
-  orientation?: 'vertical' | 'horizontal' | 'manual';
+  orientation?: 'vertical' | 'horizontal' | 'auto';
+  paddingFix?: boolean;
   children: React.ReactNode;
   onScroll?: ScrollHandler;
 };
@@ -23,6 +24,13 @@ export type ScrollerState = {
   offsetHeight: number;
   dirty: boolean;
 };
+
+const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
+  scrollTop: 0,
+  scrollHeight: 0,
+  offsetHeight: 0,
+  dirty: true,
+});
 
 const {ResizeObserver} = window;
 
@@ -52,17 +60,17 @@ export default function createScroller(scrollbarClassName?: string) {
             if (state == null || state.current == null) {
               return;
             }
-            state.current.dirty = true;
+            !state.current.dirty && (state.current.dirty = true);
           });
         })
       : null;
 
-  function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined) {
+  function useScrollerState(ref: React.Ref<ScrollerRef>, onScroll: ScrollHandler | undefined, hasRef: boolean) {
     const scroller = useRef<HTMLDivElement>(null);
-    const scrollerState = useRef<ScrollerState>({scrollTop: 0, scrollHeight: 0, offsetHeight: 0, dirty: true});
+    const scrollerState = useRef<ScrollerState>(INITIAL_SCROLLER_STATE);
     const handleScroll = useCallback(
       (event: ScrollEvent) => {
-        scrollerState.current.dirty = true;
+        !scrollerState.current.dirty && (scrollerState.current.dirty = true);
         onScroll != null && onScroll(event);
       },
       [onScroll]
@@ -89,24 +97,28 @@ export default function createScroller(scrollbarClassName?: string) {
       }),
       []
     );
-    useLayoutEffect(() => {
-      const {current} = scroller;
-      if (resizeObserver == null || current == null) {
-        return;
-      }
-      scrollerStates.set(current, scrollerState);
-      resizeObserver.observe(current);
-      return () => {
-        resizeObserver.unobserve(current);
-        scrollerStates.delete(current);
-      };
-    }, []);
+    useLayoutEffect(
+      () => {
+        const {current} = scroller;
+        if (resizeObserver == null || current == null || !hasRef) {
+          return;
+        }
+        scrollerStates.set(current, scrollerState);
+        resizeObserver.observe(current);
+        return () => {
+          resizeObserver.unobserve(current);
+          scrollerStates.delete(current);
+        };
+      },
+      [hasRef]
+    );
 
     return {handleScroll, scroller};
   }
 
   function usePaddingFixes(
-    orientation: 'vertical' | 'horizontal' | 'manual',
+    paddingFix: boolean,
+    orientation: 'vertical' | 'horizontal' | 'auto',
     dir: 'ltr' | 'rtl',
     className: string | null | undefined,
     scroller: React.RefObject<HTMLDivElement>
@@ -115,7 +127,7 @@ export default function createScroller(scrollbarClassName?: string) {
     useLayoutEffect(
       () => {
         const {current} = scroller;
-        if (current == null || orientation === 'manual') {
+        if (current == null || orientation === 'auto' || !paddingFix) {
           return;
         }
         const computedStyle = window.getComputedStyle(current);
@@ -142,18 +154,20 @@ export default function createScroller(scrollbarClassName?: string) {
           }
         }
       },
-      [orientation, dir, className, scroller]
+      [orientation, dir, className, scroller, paddingFix]
     );
     return spacingRef;
   }
 
   return forwardRef(function Scroller(
-    {children, className, onScroll, dir = 'ltr', orientation = 'vertical'}: ScrollerProps,
+    {children, className, onScroll, dir = 'ltr', orientation = 'vertical', paddingFix = true}: ScrollerProps,
     ref: React.Ref<ScrollerRef>
   ) {
-    const {handleScroll, scroller} = useScrollerState(ref, onScroll);
-    const spacingRef = usePaddingFixes(orientation, dir, className, scroller);
-    const classes = [styles.container, orientation === 'vertical' ? styles.vertical : styles.horizontal];
+    const {handleScroll, scroller} = useScrollerState(ref, onScroll, ref != null);
+    const spacingRef = usePaddingFixes(paddingFix, orientation, dir, className, scroller);
+    const classes = [
+      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
+    ];
     scrollbarClassName != null && classes.push(scrollbarClassName);
     className != null && classes.push(className);
     return (
@@ -162,7 +176,7 @@ export default function createScroller(scrollbarClassName?: string) {
         onScroll={ref != null || onScroll != null ? handleScroll : undefined}
         className={classes.join(' ')}>
         {children}
-        {orientation !== 'manual' && <div aria-hidden className={styles.padding} ref={spacingRef} />}
+        {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>
     );
   });
