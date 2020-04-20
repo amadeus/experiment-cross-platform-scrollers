@@ -1,17 +1,13 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
-import createScroller, {ScrollerRef} from './Scroller';
+import {ScrollbarSizes} from './ScrollerConstants';
+import createScroller from './Scroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
+import type {ScrollerRef} from './ScrollerConstants';
 
-const ScrollerNone = createScroller(styles.none);
-const ScrollerThin = createScroller(styles.thin);
-const ScrollerAuto = createScroller(styles.auto);
-
-enum ScrollbarSizes {
-  NONE = 'NONE',
-  THIN = 'THIN',
-  AUTO = 'AUTO',
-}
+const [ScrollerNone] = createScroller(styles.none);
+const [ScrollerThin] = createScroller(styles.thin);
+const [ScrollerAuto] = createScroller(styles.auto);
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -46,7 +42,7 @@ export default function App() {
 
   const [children, setChildren] = useState(() => new Array(30).fill(null).map((_, index) => generateRow(index)));
   const handleClick = useCallback(() => {
-    setChildren(children => [...children, generateRow(children.length)]);
+    setChildren((children) => [...children, generateRow(children.length)]);
   }, []);
 
   // @ts-ignore
@@ -54,7 +50,7 @@ export default function App() {
 
   const selectChildren = useMemo(
     () =>
-      Object.keys(ScrollbarSizes).map(size => (
+      Object.keys(ScrollbarSizes).map((size) => (
         <option value={size} key={size}>
           {size}
         </option>

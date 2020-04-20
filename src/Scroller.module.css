@@ -23,18 +23,3 @@
 .horizontal .padding {
   position: relative;
 }
-
-.testStyles {
-  position: absolute;
-  top: -100px;
-  left: -100px;
-  width: 100px;
-  height: 100px;
-  overflow: scroll;
-  background-color: red;
-}
-
-.testInnerStyles {
-  width: 200px;
-  height: 200px;
-}
