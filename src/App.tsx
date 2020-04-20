@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
 import {ScrollbarSizes} from './ScrollerConstants';
-import createScroller from './Scroller';
+import {createScroller} from './Scroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
 import type {ScrollerRef} from './ScrollerConstants';

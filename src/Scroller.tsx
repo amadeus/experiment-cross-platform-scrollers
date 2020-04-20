@@ -13,7 +13,7 @@ const DEFAULT_STATE: ScrollerState = Object.freeze({
   dirty: false,
 });
 
-export default function createScroller(scrollbarClassName?: string) {
+export function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   const scrollerStates = new Map<Element, React.RefObject<ScrollerState>>();
   const resizeObserver =
