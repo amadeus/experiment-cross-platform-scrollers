@@ -55,17 +55,35 @@
 }
 
 .section {
+  position: relative;
   height: 48px;
-  padding-top: 24px;
-  line-height: 24px;
+  padding-top: 20px;
+  padding-left: 4px;
+  line-height: 20px;
   font-size: 16px;
   font-weight: bold;
+}
+
+.section:after {
+  content: '';
+  position: absolute;
+  height: 2px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+  bottom: 2px;
+  right: 0;
 }
 
 .row {
   height: 24px;
   line-height: 24px;
   font-size: 14px;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+
+.row:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .footer {
