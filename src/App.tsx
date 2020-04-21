@@ -1,9 +1,14 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
-import {ScrollbarSizes} from './ScrollerConstants';
 import {createScroller} from './Scroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
 import type {ScrollerRef} from './ScrollerConstants';
+
+enum ScrollbarSizes {
+  NONE = 'NONE',
+  THIN = 'THIN',
+  AUTO = 'AUTO',
+}
 
 const [ScrollerNone] = createScroller(styles.none);
 const [ScrollerThin] = createScroller(styles.thin);

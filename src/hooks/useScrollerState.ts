@@ -1,16 +1,21 @@
 import {useRef, useCallback, useLayoutEffect} from 'react';
-import {INITIAL_SCROLLER_STATE} from '../ScrollerConstants'
-import type {ScrollerRef, ScrollerState, ScrollHandler, ScrollEvent} from '../ScrollerConstants';
+import type {ScrollerListState, ScrollHandler, ScrollEvent} from '../ScrollerConstants';
+
+export const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
+  scrollTop: 0,
+  scrollHeight: 0,
+  offsetHeight: 0,
+  dirty: true,
+});
 
 export default function useScrollerState(
-  ref: React.Ref<ScrollerRef>,
   onScroll: ScrollHandler | undefined,
-  hasRef: boolean,
   resizeObserver: ResizeObserver | null,
-  scrollerStates: Map<Element, React.RefObject<ScrollerState>>
+  scrollerStates: Map<Element, React.RefObject<ScrollerListState>>
 ) {
   const scroller = useRef<HTMLDivElement>(null);
-  const scrollerState = useRef<ScrollerState>(INITIAL_SCROLLER_STATE);
+  const content = useRef<HTMLDivElement>(null);
+  const scrollerState = useRef<ScrollerListState>(INITIAL_SCROLLER_STATE);
   const handleScroll = useCallback(
     (event: ScrollEvent) => {
       !scrollerState.current.dirty && (scrollerState.current.dirty = true);
@@ -18,21 +23,31 @@ export default function useScrollerState(
     },
     [onScroll]
   );
-  useLayoutEffect(
-    () => {
-      const {current} = scroller;
-      if (resizeObserver == null || current == null || !hasRef) {
-        return;
+  useLayoutEffect(() => {
+    if (resizeObserver == null) {
+      return;
+    }
+    const {current: scrollerDiv} = scroller;
+    if (scrollerDiv != null) {
+      scrollerStates.set(scrollerDiv, scrollerState);
+      resizeObserver.observe(scrollerDiv);
+    }
+    const {current: contentDiv} = content;
+    if (contentDiv != null) {
+      scrollerStates.set(contentDiv, scrollerState);
+      resizeObserver.observe(contentDiv);
+    }
+    return () => {
+      if (scrollerDiv != null) {
+        resizeObserver.unobserve(scrollerDiv);
+        scrollerStates.delete(scrollerDiv);
       }
-      scrollerStates.set(current, scrollerState);
-      resizeObserver.observe(current);
-      return () => {
-        resizeObserver.unobserve(current);
-        scrollerStates.delete(current);
-      };
-    },
-    [hasRef, resizeObserver, scrollerStates]
-  );
+      if (contentDiv != null) {
+        resizeObserver.unobserve(contentDiv);
+        scrollerStates.delete(contentDiv);
+      }
+    };
+  }, [resizeObserver, scrollerStates]);
 
-  return {handleScroll, scroller, scrollerState};
+  return {handleScroll, scroller, scrollerState, content};
 }
