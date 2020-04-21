@@ -9,14 +9,14 @@ interface ListComputerProps {
 }
 
 class ListComputer {
-  sectionHeight: SectionHeight;
-  rowHeight: RowHeight;
-  footerHeight: FooterHeight | undefined;
-  uniform: boolean;
-  paddingBottom: number;
-  paddingTop: number;
+  sectionHeight: SectionHeight = 0;
+  rowHeight: RowHeight = 0;
+  footerHeight: FooterHeight | undefined = 0;
+  uniform: boolean = true;
+  paddingBottom: number = 0;
+  paddingTop: number = 0;
 
-  constructor({sectionHeight, rowHeight, footerHeight, paddingTop, paddingBottom}: ListComputerProps) {
+  mergeProps({sectionHeight, rowHeight, footerHeight, paddingTop, paddingBottom}: ListComputerProps) {
     this.sectionHeight = sectionHeight;
     this.rowHeight = rowHeight;
     this.footerHeight = footerHeight;

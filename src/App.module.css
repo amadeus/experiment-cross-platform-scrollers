@@ -48,6 +48,29 @@
   left: 20px;
 }
 
+.section,
+.row,
+.footer {
+  box-sizing: border-box;
+}
+
+.section {
+  height: 48px;
+  padding-top: 24px;
+  line-height: 24px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.row {
+  height: 24px;
+  line-height: 24px;
+  font-size: 14px;
+}
+
+.footer {
+}
+
 .scrollbar {
   scrollbar-color: transparent transparent;
 }

@@ -26,20 +26,25 @@ export type SectionHeight = number | ((section: number) => number);
 export type RowHeight = number | ((section: number, row: number) => number);
 export type FooterHeight = number | ((section: number) => number);
 
+export type RenderSection = (specs: {section: number}) => React.ReactNode;
+export type RenderRow = (specs: {section: number; row: number}) => React.ReactNode;
+export type RenderFooter = (specs: {section: number}) => React.ReactNode;
+
 export interface ScrollerListProps extends ScrollerBaseProps {
   // NOTE(amadeus): We should probably not deal with this if possible
   // onScrollerStateUpdate?: () => any;
 
-  renderSection: () => React.ReactNode;
-  renderRow: () => React.ReactNode;
-  renderFooter: () => React.ReactNode;
+  sections: number[];
+  renderSection: RenderSection;
+  renderRow: RenderRow;
+  renderFooter?: RenderFooter;
 
   // NOTE(amadeus): We could potentially assume a function for height
   // calculation is not uniform, but if it's just a number, than it's uniform
   // uniform?: boolean;
   sectionHeight: SectionHeight;
   rowHeight: RowHeight;
-  footerHeight: FooterHeight;
+  footerHeight?: FooterHeight;
 
   // NOTE(amadeus): The size in pixels that we should chunk rendering blocks too
   chunkSize?: number;
@@ -51,8 +56,8 @@ export interface ScrollerListProps extends ScrollerBaseProps {
   // onResize: () => any;
 
   // NOTE(amadeus): Should we keep this?
-  // paddingTop: number;
-  // paddingBottom: number;
+  paddingTop?: number;
+  paddingBottom?: number;
 
   'aria-label'?: string;
   'data-ref-id'?: string;

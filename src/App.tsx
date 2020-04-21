@@ -1,8 +1,8 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
-import {createScroller} from './Scroller';
+import {createScroller, createListScroller} from './Scroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
-import type {ScrollerRef} from './ScrollerConstants';
+import type {ScrollerRef, RenderSection, RenderRow} from './ScrollerConstants';
 
 enum ScrollbarSizes {
   NONE = 'NONE',
@@ -10,9 +10,10 @@ enum ScrollbarSizes {
   AUTO = 'AUTO',
 }
 
-const [ScrollerNone] = createScroller(styles.none);
-const [ScrollerThin] = createScroller(styles.thin);
-const [ScrollerAuto] = createScroller(styles.auto);
+const ScrollerNone = createScroller(styles.none);
+const ScrollerThin = createScroller(styles.thin);
+const ScrollerAuto = createScroller(styles.auto);
+const ListThin = createListScroller(styles.thin);
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -24,6 +25,24 @@ const [ScrollerAuto] = createScroller(styles.auto);
 // * All other browsers - if the custom css scrollbar styles affect the
 // scrollbar within the desired range then we assume it looks correct,
 // otherwise we need to add additional padding to account for the scrollbar
+
+const LIST_SECTIONS = [10, 3, 30, 10, 42, 92];
+
+const renderSection: RenderSection = ({section}) => {
+  return (
+    <div key={`section-${section}`} className={styles.section}>
+      Section {section}
+    </div>
+  );
+};
+
+const renderRow: RenderRow = ({section, row}) => {
+  return (
+    <div key={`row-${section}-${row}`} className={styles.row}>
+      Row {section}-{row}
+    </div>
+  );
+};
 
 export default function App() {
   const ref = useRef<ScrollerRef>(null);
@@ -87,9 +106,14 @@ export default function App() {
       <Scroller ref={ref} className={styles.container} dir={dir}>
         {children}
       </Scroller>
-      <Scroller className={styles.horizontalContainer} orientation="horizontal">
-        {children}
-      </Scroller>
+      <ListThin
+        className={styles.container}
+        sections={LIST_SECTIONS}
+        renderSection={renderSection}
+        renderRow={renderRow}
+        sectionHeight={48}
+        rowHeight={24}
+      />
     </div>
   );
 }

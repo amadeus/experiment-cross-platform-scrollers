@@ -1,5 +1,5 @@
 import {useRef, useCallback, useLayoutEffect} from 'react';
-import type {ScrollerListState, ScrollHandler, ScrollEvent} from '../ScrollerConstants';
+import type {ScrollerListState} from '../ScrollerConstants';
 
 export const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
   scrollTop: 0,
@@ -9,20 +9,15 @@ export const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
 });
 
 export default function useScrollerState(
-  onScroll: ScrollHandler | undefined,
   resizeObserver: ResizeObserver | null,
   scrollerStates: Map<Element, React.RefObject<ScrollerListState>>
 ) {
   const scroller = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const scrollerState = useRef<ScrollerListState>(INITIAL_SCROLLER_STATE);
-  const handleScroll = useCallback(
-    (event: ScrollEvent) => {
-      !scrollerState.current.dirty && (scrollerState.current.dirty = true);
-      onScroll != null && onScroll(event);
-    },
-    [onScroll]
-  );
+  const markStateDirty = useCallback(() => {
+    !scrollerState.current.dirty && (scrollerState.current.dirty = true);
+  }, []);
   useLayoutEffect(() => {
     if (resizeObserver == null) {
       return;
@@ -49,5 +44,5 @@ export default function useScrollerState(
     };
   }, [resizeObserver, scrollerStates]);
 
-  return {handleScroll, scroller, scrollerState, content};
+  return {markStateDirty, scroller, scrollerState, content};
 }
