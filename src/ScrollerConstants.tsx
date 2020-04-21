@@ -22,9 +22,9 @@ export interface ScrollerProps extends ScrollerBaseProps {
   children: React.ReactNode;
 }
 
-type SectionHeight = number | ((section: number) => number);
-type RowHeight = number | ((section: number, row?: number) => number);
-type FooterHeight = number | ((section: number) => number);
+export type SectionHeight = number | ((section: number) => number);
+export type RowHeight = number | ((section: number, row: number) => number);
+export type FooterHeight = number | ((section: number) => number);
 
 export interface ScrollerListProps extends ScrollerBaseProps {
   // NOTE(amadeus): We should probably not deal with this if possible
@@ -40,6 +40,9 @@ export interface ScrollerListProps extends ScrollerBaseProps {
   sectionHeight: SectionHeight;
   rowHeight: RowHeight;
   footerHeight: FooterHeight;
+
+  // NOTE(amadeus): The size in pixels that we should chunk rendering blocks too
+  chunkSize?: number;
 
   // NOTE(amadeus): Figure out how to annotate onResize since it wont actually
   // have any event associated with it... - or even better... DO WE NEED IT?!
@@ -84,4 +87,20 @@ export interface ScrollerListRef {
 export interface ScrollerSpecs {
   width: number;
   height: number;
+}
+
+export interface ListItem {
+  section: number;
+  row?: number;
+  footer?: boolean;
+
+  // NOTE(amadeus): Do I actually, in effect, need these?
+  // index: numbur;
+  // rowIndex?: number;
+}
+
+export interface ListState {
+  spacerTop: number;
+  spacerBottom: number;
+  items: ListItem[];
 }
