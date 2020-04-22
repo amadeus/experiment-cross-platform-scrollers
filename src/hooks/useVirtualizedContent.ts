@@ -52,16 +52,22 @@ export default function useVirtualizedContent({
   const blockState = useRef(DEFAULT_BLOCK_STATE);
   blockState.current = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
   const [blockStart, blockEnd] = blockState.current;
-  const determineScrollUpdate = useCallback(() => {
+  const forceUpdateIfNecessary = useCallback(() => {
     const {dirty, scrollTop, offsetHeight} = getScrollerState();
-    // If state is dirty, then there's nothing to do
-    if (dirty) return;
-    const [blockStart] = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
+    // If state is dirty, then there's nothing to do - this should only happen
+    // on the first tick, but it means we can't reliably update anything, so we
+    // should quit early
+    if (dirty > 0) return;
+    const [blockStart, blockEnd] = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
     // Only test against the first block - so we don't get double calculations
     // when the end changes.  It is safe for rendering because we add a chunk
     // before and after the scrollview, so there should never be a case where
     // it doesn't render content
-    if (blockStart !== blockState.current[0]) {
+    if (dirty === 1 && blockStart !== blockState.current[0]) {
+      forceUpdate();
+      return;
+    }
+    if (blockEnd !== blockState.current[1]) {
       forceUpdate();
     }
   }, [forceUpdate, chunkSize, getScrollerState]);
@@ -69,7 +75,7 @@ export default function useVirtualizedContent({
   itemState.current = useMemo(() => {
     // If state is dirty, it's generally due to initial load, and therefore we
     // should not calculate anything
-    if (dirty) {
+    if (dirty > 0) {
       return itemState.current;
     }
     listComputer.mergeProps({sectionHeight, rowHeight, footerHeight, paddingBottom, paddingTop});
@@ -87,5 +93,5 @@ export default function useVirtualizedContent({
     listComputer,
     chunkSize,
   ]);
-  return [itemState.current, determineScrollUpdate];
+  return [itemState.current, forceUpdateIfNecessary];
 }

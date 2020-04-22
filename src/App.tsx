@@ -1,5 +1,6 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
-import {createScroller, createListScroller} from './Scroller';
+import createScroller from './createScroller';
+import createListScroller from './createListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
 import type {ScrollerRef, RenderSection, RenderRow} from './ScrollerConstants';
