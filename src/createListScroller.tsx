@@ -92,7 +92,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       (dirtyType: 1 | 2 = 2) => {
         if (dirtyType > scrollerState.current.dirty) {
           scrollerState.current.dirty = dirtyType;
-          forceUpdateIfNecessary();
+          forceUpdateIfNecessary(dirtyType);
         }
       },
       [forceUpdateIfNecessary]

@@ -32,6 +32,8 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   items: [],
 });
 
+type VirtualizedContentValue = [ListState, (fromDirtyType: 1 | 2) => void];
+
 export default function useVirtualizedContent({
   sections,
   sectionHeight,
@@ -41,37 +43,34 @@ export default function useVirtualizedContent({
   paddingTop = 0,
   paddingBottom = 0,
   getScrollerState,
-}: VirtualizedProps): [ListState, () => void] {
+}: VirtualizedProps): VirtualizedContentValue {
   const forceUpdate = useForceUpdate();
   const itemState = useRef<ListState>(DEFAULT_ITEM_STATE);
   const [listComputer] = useState(() => new ListComputer());
-
   const {dirty, scrollTop, offsetHeight} = getScrollerState();
   // If the state is dirty - we skip computation and force an update next tick
   useLayoutEffect(() => void (dirty && forceUpdate()), [dirty, forceUpdate]);
   const blockState = useRef(DEFAULT_BLOCK_STATE);
   blockState.current = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
   const [blockStart, blockEnd] = blockState.current;
-  const forceUpdateIfNecessary = useCallback(() => {
-    const {dirty, scrollTop, offsetHeight} = getScrollerState();
-    // If state is dirty, then there's nothing to do - this should only happen
-    // on the first tick, but it means we can't reliably update anything, so we
-    // should quit early
-    if (dirty > 0) return;
-    const [blockStart, blockEnd] = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
-    // Only test against the first block - so we don't get double calculations
-    // when the end changes.  It is safe for rendering because we add a chunk
-    // before and after the scrollview, so there should never be a case where
-    // it doesn't render content
-    if (dirty === 1 && blockStart !== blockState.current[0]) {
-      forceUpdate();
-      return;
-    }
-    if (blockEnd !== blockState.current[1]) {
-      forceUpdate();
-    }
-  }, [forceUpdate, chunkSize, getScrollerState]);
-
+  const forceUpdateIfNecessary = useCallback(
+    (fromDirtyType: 1 | 2) => {
+      const {dirty, scrollTop, offsetHeight} = getScrollerState();
+      // If state returned dirty, then that means we are still in the first
+      // tick and should quit out early (or something has gone horribly wrong
+      // and we can't trust the current state)
+      if (dirty > 0) return;
+      const [blockStart, blockEnd] = getBlocksFromScrollerState(scrollTop, offsetHeight, chunkSize);
+      // If we are updating from a scroll type event, then we only want to
+      // check against the first block to optimize away unneeded updates
+      if (blockStart !== blockState.current[0]) {
+        forceUpdate();
+      } else if (fromDirtyType === 2 && blockEnd !== blockState.current[1]) {
+        forceUpdate();
+      }
+    },
+    [forceUpdate, chunkSize, getScrollerState]
+  );
   itemState.current = useMemo(() => {
     // If state is dirty, it's generally due to initial load, and therefore we
     // should not calculate anything
