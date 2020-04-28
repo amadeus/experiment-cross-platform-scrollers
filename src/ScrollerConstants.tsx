@@ -93,6 +93,8 @@ export interface ScrollerListState extends ScrollerState {
 export interface ScrollerListRef {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerListState;
+  // NOTE(amadeus): Delete me at some point - this is for testing only
+  forceUpdate: () => void;
 }
 
 export interface ScrollerSpecs {

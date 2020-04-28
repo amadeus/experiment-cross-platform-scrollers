@@ -1,11 +1,14 @@
-import React, {useRef, useImperativeHandle, forwardRef, useCallback} from 'react';
+import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useState} from 'react';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedContent from './hooks/useVirtualizedContent';
-import renderItems from './core/renderItems';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {
+  ListItem,
+  RenderFooter,
+  RenderRow,
+  RenderSection,
   ScrollEvent,
   ScrollerListProps,
   ScrollerListRef,
@@ -21,6 +24,51 @@ const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
   offsetHeight: 0,
   dirty: 2,
 });
+
+interface RenderListItemProps {
+  items: ListItem[];
+  renderSection: RenderSection;
+  renderRow: RenderRow;
+  renderFooter: RenderFooter | undefined;
+  spacerTop: number;
+  spacerBottom: number;
+}
+
+function renderListItems({
+  renderSection,
+  renderRow,
+  renderFooter,
+  items,
+  spacerTop,
+  spacerBottom,
+}: RenderListItemProps): React.ReactNode {
+  const content: React.ReactNodeArray = [<div style={{height: spacerTop}} key="list-spacer-top" />];
+  let sectionItems: React.ReactNodeArray = [];
+  // let lastSection = 0;
+  items.forEach(({section, row, footer}) => {
+    if (footer === true) {
+      // sectionItems.push(renderFooter({section, index}));
+      // content.push(wrapSection != null ? wrapSection(lastSection, sectionItems) : sectionItems);
+      renderFooter != null && sectionItems.push(renderFooter({section}));
+      content.push(sectionItems);
+      sectionItems = [];
+    } else {
+      // lastSection = section;
+      if (row == null) {
+        sectionItems.push(renderSection({section}));
+      } else {
+        sectionItems.push(renderRow({section, row}));
+      }
+    }
+  });
+  if (sectionItems.length > 0) {
+    // content.push(wrapSection ? wrapSection(lastSection, sectionItems) : sectionItems);
+    content.push(sectionItems);
+  }
+
+  content.push(<div style={{height: spacerBottom}} key="list-spacer-bottom" />);
+  return content;
+}
 
 export default function createListScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
@@ -78,6 +126,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       }
       return scrollerState.current;
     }, [scroller, scrollerState]);
+    const [, setForceUpdate] = useState(() => 0);
     const [{spacerTop, spacerBottom, items}, forceUpdateIfNecessary] = useVirtualizedContent({
       sections,
       sectionHeight,
@@ -106,6 +155,10 @@ export default function createListScroller(scrollbarClassName?: string) {
           return scroller.current;
         },
         getScrollerState,
+        // NOTE(amadeus): Keeping this around for testing
+        forceUpdate() {
+          setForceUpdate((a) => a + 1);
+        },
       }),
       [getScrollerState]
     );
@@ -124,11 +177,14 @@ export default function createListScroller(scrollbarClassName?: string) {
     ].filter((str) => str != null);
     return (
       <div ref={scroller} onScroll={handleScroll} className={classes.join(' ')} {...props}>
-        <div ref={content}>
-          <div style={{height: spacerTop}} />
-          {renderItems({items, renderSection, renderRow, renderFooter})}
-          <div style={{height: spacerBottom}} />
-        </div>
+        {useMemo(
+          () => (
+            <div ref={content}>
+              {renderListItems({items, renderSection, renderRow, renderFooter, spacerBottom, spacerTop})}
+            </div>
+          ),
+          [items, renderSection, renderRow, renderFooter, spacerBottom, spacerTop]
+        )}
         {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>
     );
