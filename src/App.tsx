@@ -3,7 +3,7 @@ import createScroller from './createScroller';
 import createListScroller from './createListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
-import type {ScrollerRef, RenderSection, RenderRow} from './ScrollerConstants';
+import type {ScrollerListRef, RenderSection, RenderRow} from './ScrollerConstants';
 
 enum ScrollbarSizes {
   NONE = 'NONE',
@@ -27,7 +27,7 @@ const ListThin = createListScroller(styles.thin);
 // scrollbar within the desired range then we assume it looks correct,
 // otherwise we need to add additional padding to account for the scrollbar
 
-const LIST_SECTIONS = [10, 3, 30, 10, 42, 92];
+const LIST_SECTIONS = [10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92];
 
 const renderSection: RenderSection = ({section}) => {
   return (
@@ -37,16 +37,47 @@ const renderSection: RenderSection = ({section}) => {
   );
 };
 
-const renderRow: RenderRow = ({section, row}) => {
+interface RowProps {
+  section: number;
+  row: number;
+}
+
+function Row({section, row}: RowProps) {
   return (
     <div key={`row-${section}-${row}`} className={styles.row}>
       Row {section}-{row}
     </div>
   );
+}
+
+const renderRow: RenderRow = ({section, row}) => {
+  return <Row key={`row-${section}-${row}`} section={section} row={row} />;
 };
 
+function useIsScrolling(): [boolean, () => void] {
+  const [, setScrolling] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const scrollingRef = useRef(false);
+  const handleScroll = useCallback(() => {
+    if (!scrollingRef.current) {
+      setScrolling(() => {
+        scrollingRef.current = true;
+        return scrollingRef.current;
+      });
+    }
+    timeoutRef.current != null && clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setScrolling(() => {
+        scrollingRef.current = false;
+        return scrollingRef.current;
+      });
+    }, 60);
+  }, []);
+  return [scrollingRef.current, handleScroll];
+}
+
 export default function App() {
-  const ref = useRef<ScrollerRef>(null);
+  const ref = useRef<ScrollerListRef>(null);
   const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
   const [dir, setDir] = useState<'ltr' | 'rtl'>('ltr');
   const handleScrollbarChange = useCallback(({currentTarget: {value}}) => {
@@ -92,6 +123,12 @@ export default function App() {
     Scroller = ScrollerAuto;
   }
 
+  const [scrolling, handleScroll] = useIsScrolling();
+  const classes = [styles.container];
+  if (scrolling) {
+    classes.push(styles.scrolling);
+  }
+
   return (
     <div dir={dir} className={styles.wrapper}>
       <div className={styles.tools}>
@@ -104,11 +141,13 @@ export default function App() {
         </select>
         <button onClick={handleClick}>Add Item</button>
       </div>
-      <Scroller ref={ref} className={styles.container} dir={dir}>
+      <Scroller className={styles.container} dir={dir}>
         {children}
       </Scroller>
       <ListThin
-        className={styles.container}
+        ref={ref}
+        onScroll={handleScroll}
+        className={classes.join(' ')}
         sections={LIST_SECTIONS}
         renderSection={renderSection}
         renderRow={renderRow}

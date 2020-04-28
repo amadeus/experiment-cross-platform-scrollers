@@ -63,7 +63,6 @@ class ListComputer {
   compute(sections: number[], top: number, bottom: number): ListState {
     let height = this.paddingTop;
     let spacerTop = this.paddingTop;
-    let spacerBottom = this.paddingBottom;
     const items = [];
 
     function isVisible(itemHeight: number) {
@@ -73,7 +72,6 @@ class ListComputer {
         spacerTop += itemHeight;
         return false;
       } else if (prevHeight > bottom) {
-        spacerBottom += itemHeight;
         return false;
       } else {
         return true;
@@ -126,7 +124,7 @@ class ListComputer {
 
     return {
       spacerTop,
-      spacerBottom,
+      totalHeight: height + this.paddingBottom,
       items,
     };
   }

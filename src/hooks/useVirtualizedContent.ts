@@ -28,7 +28,7 @@ function getBlocksFromScrollerState(scrollTop: number, offsetHeight: number, chu
 
 const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   spacerTop: 0,
-  spacerBottom: 0,
+  totalHeight: 0,
   items: [],
 });
 

@@ -31,7 +31,6 @@ interface RenderListItemProps {
   renderRow: RenderRow;
   renderFooter: RenderFooter | undefined;
   spacerTop: number;
-  spacerBottom: number;
 }
 
 function renderListItems({
@@ -40,7 +39,6 @@ function renderListItems({
   renderFooter,
   items,
   spacerTop,
-  spacerBottom,
 }: RenderListItemProps): React.ReactNode {
   const content: React.ReactNodeArray = [<div style={{height: spacerTop}} key="list-spacer-top" />];
   let sectionItems: React.ReactNodeArray = [];
@@ -65,8 +63,6 @@ function renderListItems({
     // content.push(wrapSection ? wrapSection(lastSection, sectionItems) : sectionItems);
     content.push(sectionItems);
   }
-
-  content.push(<div style={{height: spacerBottom}} key="list-spacer-bottom" />);
   return content;
 }
 
@@ -127,7 +123,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       return scrollerState.current;
     }, [scroller, scrollerState]);
     const [, setForceUpdate] = useState(() => 0);
-    const [{spacerTop, spacerBottom, items}, forceUpdateIfNecessary] = useVirtualizedContent({
+    const [{spacerTop, totalHeight, items}, forceUpdateIfNecessary] = useVirtualizedContent({
       sections,
       sectionHeight,
       rowHeight,
@@ -179,11 +175,11 @@ export default function createListScroller(scrollbarClassName?: string) {
       <div ref={scroller} onScroll={handleScroll} className={classes.join(' ')} {...props}>
         {useMemo(
           () => (
-            <div ref={content}>
-              {renderListItems({items, renderSection, renderRow, renderFooter, spacerBottom, spacerTop})}
+            <div ref={content} style={{height: totalHeight}}>
+              {renderListItems({items, renderSection, renderRow, renderFooter, spacerTop})}
             </div>
           ),
-          [items, renderSection, renderRow, renderFooter, spacerBottom, spacerTop]
+          [items, renderSection, renderRow, renderFooter, totalHeight, spacerTop]
         )}
         {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>

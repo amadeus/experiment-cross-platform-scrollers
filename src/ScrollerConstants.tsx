@@ -114,6 +114,6 @@ export interface ListItem {
 
 export interface ListState {
   spacerTop: number;
-  spacerBottom: number;
+  totalHeight: number;
   items: ListItem[];
 }
