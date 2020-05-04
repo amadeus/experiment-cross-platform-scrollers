@@ -155,19 +155,26 @@
   height: 0;
 }
 
-.thin {
+.thinBase {
   composes: scrollbar;
-  padding: 8px;
   scrollbar-width: thin;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
-.thin::-webkit-scrollbar {
+.thinBase::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.thin::-webkit-scrollbar-thumb {
+.thinBase::-webkit-scrollbar-thumb {
   width: 4px;
   border-radius: 4px;
   border: 2px solid transparent;
+}
+
+.thin {
+  composes: thinBase;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }

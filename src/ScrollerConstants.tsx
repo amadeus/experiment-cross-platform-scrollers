@@ -90,9 +90,33 @@ export interface ScrollerListState extends ScrollerState {
   dirty: 0 | 1 | 2;
 }
 
+interface ScrollToAPI {
+  animate?: boolean;
+  callback?: () => void | undefined;
+}
+
+interface ScrollToProps extends ScrollToAPI {
+  to: number;
+}
+
+interface ScrollToIndexProps extends ScrollToAPI {
+  section: number;
+  row?: number;
+  padding?: number;
+}
+
+interface ScrollIntoViewProps extends ScrollToAPI {
+  top: number;
+  bottom: number;
+  padding?: number;
+}
+
 export interface ScrollerListRef {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerListState;
+  scrollTo: (props: ScrollToProps) => void;
+  scrollToIndex: (props: ScrollToIndexProps) => void;
+  scrollIntoView: (props: ScrollIntoViewProps) => void;
   // NOTE(amadeus): Delete me at some point - this is for testing only
   forceUpdate: () => void;
 }

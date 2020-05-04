@@ -6,6 +6,7 @@ interface ListComputerProps {
   footerHeight?: FooterHeight;
   paddingTop: number;
   paddingBottom: number;
+  sections: number[];
 }
 
 class ListComputer {
@@ -15,8 +16,10 @@ class ListComputer {
   uniform: boolean = true;
   paddingBottom: number = 0;
   paddingTop: number = 0;
+  sections: number[] = [];
 
-  mergeProps({sectionHeight, rowHeight, footerHeight, paddingTop, paddingBottom}: ListComputerProps) {
+  mergeProps({sectionHeight, rowHeight, footerHeight, paddingTop, paddingBottom, sections}: ListComputerProps) {
+    this.sections = sections;
     this.sectionHeight = sectionHeight;
     this.rowHeight = rowHeight;
     this.footerHeight = footerHeight;
@@ -25,15 +28,15 @@ class ListComputer {
     this.paddingBottom = paddingBottom;
   }
 
-  getHeight(sections: number[]): number {
+  getHeight(): number {
     let height = this.paddingTop;
-    const {length} = sections;
+    const {length} = this.sections;
     for (let section = 0; section < length; section++) {
       height += this.getHeightForSection(section);
       if (this.uniform) {
-        height += sections[section] * this.getHeightForRow(section, 0);
+        height += this.sections[section] * this.getHeightForRow(section, 0);
       } else {
-        for (let row = 0; row < sections[section]; row++) {
+        for (let row = 0; row < this.sections[section]; row++) {
           height += this.getHeightForRow(section, row);
         }
       }
@@ -60,7 +63,7 @@ class ListComputer {
     return typeof footerHeight === 'number' ? footerHeight : footerHeight(section);
   }
 
-  compute(sections: number[], top: number, bottom: number): ListState {
+  compute(top: number, bottom: number): ListState {
     let height = this.paddingTop;
     let spacerTop = this.paddingTop;
     const items = [];
@@ -82,8 +85,8 @@ class ListComputer {
     // this stuff and see if it is needed later
     // let rowIndex = 0;
     // let index = 0;
-    for (let section = 0; section < sections.length; section++) {
-      const rows = sections[section];
+    for (let section = 0; section < this.sections.length; section++) {
+      const rows = this.sections[section];
 
       if (rows === 0) {
         continue;
@@ -129,13 +132,13 @@ class ListComputer {
     };
   }
 
-  computeScrollPosition(sections: number[], targetSection: number, targetRow?: number) {
+  computeScrollPosition(targetSection: number, targetRow?: number | undefined) {
     const {paddingTop} = this;
     let scrollTop = paddingTop;
     let section = 0;
     let foundTarget = false;
     while (section <= targetSection) {
-      const rows = sections[section];
+      const rows = this.sections[section];
       if (section === targetSection && targetRow == null) {
         foundTarget = true;
         continue;
@@ -169,10 +172,10 @@ class ListComputer {
       section += 1;
     }
 
-    return {
+    return [
       scrollTop,
-      height: targetRow != null ? this.getHeightForRow(targetSection, targetRow) : this.getHeightForSection(section),
-    };
+      targetRow != null ? this.getHeightForRow(targetSection, targetRow) : this.getHeightForSection(section),
+    ];
   }
 }
 

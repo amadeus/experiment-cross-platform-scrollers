@@ -32,7 +32,7 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   items: [],
 });
 
-type VirtualizedContentValue = [ListState, (fromDirtyType: 1 | 2) => void];
+type VirtualizedContentValue = [ListState, ListComputer, (fromDirtyType: 1 | 2) => void];
 
 export default function useVirtualizedContent({
   sections,
@@ -77,8 +77,8 @@ export default function useVirtualizedContent({
     if (dirty > 0) {
       return itemState.current;
     }
-    listComputer.mergeProps({sectionHeight, rowHeight, footerHeight, paddingBottom, paddingTop});
-    return listComputer.compute(sections, Math.max(0, blockStart * chunkSize), blockEnd * chunkSize);
+    listComputer.mergeProps({sectionHeight, rowHeight, footerHeight, paddingBottom, paddingTop, sections});
+    return listComputer.compute(Math.max(0, blockStart * chunkSize), blockEnd * chunkSize);
   }, [
     dirty,
     blockStart,
@@ -92,5 +92,5 @@ export default function useVirtualizedContent({
     listComputer,
     chunkSize,
   ]);
-  return [itemState.current, forceUpdateIfNecessary];
+  return [itemState.current, listComputer, forceUpdateIfNecessary];
 }

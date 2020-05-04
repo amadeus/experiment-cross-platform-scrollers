@@ -14,7 +14,7 @@ enum ScrollbarSizes {
 const ScrollerNone = createScroller(styles.none);
 const ScrollerThin = createScroller(styles.thin);
 const ScrollerAuto = createScroller(styles.auto);
-const ListThin = createListScroller(styles.thin);
+const ListThin = createListScroller(styles.thinBase);
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -153,6 +153,7 @@ export default function App() {
         renderRow={renderRow}
         sectionHeight={48}
         rowHeight={24}
+        paddingBottom={8}
       />
     </div>
   );

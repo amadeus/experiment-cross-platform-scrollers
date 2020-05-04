@@ -2,6 +2,7 @@ import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, us
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedContent from './hooks/useVirtualizedContent';
+import useAnimatedScroll from './hooks/useAnimatedScroll';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {
@@ -111,19 +112,16 @@ export default function createListScroller(scrollbarClassName?: string) {
       }
       if (dirty === 1) {
         const {scrollTop} = current;
-        scrollerState.current = {
-          ...scrollerState.current,
-          scrollTop,
-          dirty: 0,
-        };
+        scrollerState.current = {...scrollerState.current, scrollTop, dirty: 0};
       } else {
         const {scrollTop, scrollHeight, offsetHeight} = current;
         scrollerState.current = {scrollTop, scrollHeight, offsetHeight, dirty: 0};
       }
       return scrollerState.current;
-    }, [scroller, scrollerState]);
-    const [, setForceUpdate] = useState(() => 0);
-    const [{spacerTop, totalHeight, items}, forceUpdateIfNecessary] = useVirtualizedContent({
+    }, []);
+    const spring = useAnimatedScroll(scroller);
+    const [, setForceUpdate] = useState(0);
+    const [{spacerTop, totalHeight, items}, listComputer, forceUpdateIfNecessary] = useVirtualizedContent({
       sections,
       sectionHeight,
       rowHeight,
@@ -150,13 +148,41 @@ export default function createListScroller(scrollbarClassName?: string) {
         getScrollerNode() {
           return scroller.current;
         },
+        // NOTE(amadeus): Make animate default to false before shipping
+        scrollTo({to, animate = true, callback}) {
+          const {scrollHeight, offsetHeight, scrollTop, dirty} = getScrollerState();
+          if (dirty) return;
+          spring.to({
+            to: Math.min(to, scrollHeight - offsetHeight + 1),
+            from: scrollTop,
+            animate,
+            callback,
+          });
+        },
+        // NOTE(amadeus): Make animate default to false before shipping
+        scrollToIndex({section, row, animate = true, callback, padding = 0}) {
+          const {scrollHeight, offsetHeight, scrollTop, dirty} = getScrollerState();
+          if (dirty) return;
+          const [to] = listComputer.computeScrollPosition(section, row);
+          spring.to({
+            // Always add 1 to the maximum scroll to position due to potential
+            // rounding issues
+            to: Math.min(to + padding, scrollHeight - offsetHeight + 1),
+            from: scrollTop,
+            animate,
+            callback,
+          });
+        },
         getScrollerState,
+        scrollIntoView() {
+          // NOTE(amadeus): Actually put code here...
+        },
         // NOTE(amadeus): Keeping this around for testing
         forceUpdate() {
           setForceUpdate((a) => a + 1);
         },
       }),
-      [getScrollerState]
+      [getScrollerState, listComputer, spring]
     );
     const spacingRef = usePaddingFixes(paddingFix, orientation, dir, className, scroller, specs);
     const handleScroll = useCallback(
