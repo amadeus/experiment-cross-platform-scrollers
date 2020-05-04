@@ -141,7 +141,7 @@ class ListComputer {
       const rows = this.sections[section];
       if (section === targetSection && targetRow == null) {
         foundTarget = true;
-        continue;
+        break;
       }
       scrollTop += this.getHeightForSection(section);
       if (rows === 0) {
