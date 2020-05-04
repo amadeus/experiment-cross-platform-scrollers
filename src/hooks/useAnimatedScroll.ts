@@ -34,7 +34,6 @@ export default function useAnimatedScroll(
         return;
       }
       let toFixed = Math.min(to, scrollHeight - offsetHeight + 1);
-      console.log('toFixed', toFixed, 'scrollTop', scrollTop);
       spring.to({
         to: toFixed,
         from: scrollTop,
@@ -79,7 +78,6 @@ export default function useAnimatedScroll(
   );
   const scrollToIndex = useCallback(
     ({section, row, animate = true, callback, padding = 0}: ScrollToIndexProps) => {
-      console.log(section, row);
       const [top, height] = listComputer.computeScrollPosition(section, row);
       scrollIntoView({
         top,
