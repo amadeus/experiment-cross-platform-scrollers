@@ -97,7 +97,8 @@
   scrollbar-color: transparent transparent;
 }
 
-.scrollbar:hover {
+.scrollbar:hover,
+.scrolling.scrollbar {
   scrollbar-color: rgba(0, 0, 0, 0.2) #ccc;
 }
 
@@ -115,7 +116,8 @@
   visibility: hidden;
 }
 
-.scrollbar:hover::-webkit-scrollbar-thumb {
+.scrollbar:hover::-webkit-scrollbar-thumb,
+.scrolling.scrollbar::-webkit-scrollbar-thumb {
   visibility: visible;
 }
 

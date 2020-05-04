@@ -95,17 +95,17 @@ interface ScrollToAPI {
   callback?: () => void | undefined;
 }
 
-interface ScrollToProps extends ScrollToAPI {
+export interface ScrollToProps extends ScrollToAPI {
   to: number;
 }
 
-interface ScrollToIndexProps extends ScrollToAPI {
+export interface ScrollToIndexProps extends ScrollToAPI {
   section: number;
   row?: number;
   padding?: number;
 }
 
-interface ScrollIntoViewProps extends ScrollToAPI {
+export interface ScrollIntoViewProps extends ScrollToAPI {
   top: number;
   bottom: number;
   padding?: number;

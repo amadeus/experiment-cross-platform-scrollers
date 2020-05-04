@@ -31,7 +31,7 @@ export default class ManualSpring {
 
   private callback: Callback;
 
-  private accumulatedTime: number = 0;
+  private accumulator: number = 0;
   private from: number = 0;
   private target: number = 0;
   private vel: number = 0;
@@ -47,7 +47,7 @@ export default class ManualSpring {
     tension = 160,
     friction = 22,
     mass = 1,
-    threshold = 0.03,
+    threshold = 0.001,
     clamp = false,
     maxVelocity = Infinity,
   }: ManualSpringProps) {
@@ -121,15 +121,20 @@ export default class ManualSpring {
     }
 
     const now = timestamp;
-    this.accumulatedTime = Math.min((now - this.last) / 1000 + this.accumulatedTime, 2);
+    // NOTE(amadeus): Never add more than 2 seconds worth of frames...
+    this.accumulator = Math.min((now - this.last) / 1000 + this.accumulator, 2);
 
     // Replay frames if we skipped em
-    while (this.accumulatedTime > FRAME) {
-      this.accumulatedTime -= FRAME;
+    while (this.accumulator > FRAME) {
+      this.accumulator -= FRAME;
       const {vel, from, accel} = this.getUpdates(this.vel, this.from);
       this.vel = vel;
-      this.from = from;
-      if (this.clamp && ((this.vel > 0 && this.target < this.from) || (this.vel < 0 && this.target > this.from))) {
+      if (
+        this.clamp &&
+        (from === this.target ||
+          (from < this.target && this.from > this.target) ||
+          (from > this.target && this.from < this.target))
+      ) {
         console.log('stopping due to clamp');
         this.stop(this.target);
         return;
@@ -139,11 +144,13 @@ export default class ManualSpring {
         this.stop(this.target);
         return;
       }
+      this.from = from;
     }
     let {from} = this;
-    if (this.accumulatedTime > 0) {
+    // Get the interpolated from value
+    if (this.accumulator > 0) {
       const {from: _from} = this.getUpdates(this.vel, from);
-      const increment = (_from - from) * (this.accumulatedTime / FRAME);
+      const increment = (_from - from) * (this.accumulator / FRAME);
       from += increment;
     }
     this.callback(from, this.abort);
@@ -156,6 +163,7 @@ export default class ManualSpring {
   private stop(value: number) {
     window.cancelAnimationFrame(this.nextTick);
     this.animating = false;
+    this.accumulator = 0;
     if (value != null) {
       this.target = this.from = value;
       this.callback(value, this.abort);

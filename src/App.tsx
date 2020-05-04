@@ -114,6 +114,19 @@ export default function App() {
     []
   );
 
+  const top = useRef(true);
+  const toggleScroll = useCallback(() => {
+    const {current} = ref;
+    if (current == null) return;
+    if (top.current) {
+      top.current = false;
+      current.scrollTo({to: Number.MAX_SAFE_INTEGER, animate: true});
+    } else {
+      top.current = true;
+      current.scrollTo({to: 0, animate: true});
+    }
+  }, []);
+
   let Scroller;
   if (size === ScrollbarSizes.NONE) {
     Scroller = ScrollerNone;
@@ -140,6 +153,7 @@ export default function App() {
           <option value="rtl">RTL</option>
         </select>
         <button onClick={handleClick}>Add Item</button>
+        <button onClick={toggleScroll}>Toggle Scroll</button>
       </div>
       <Scroller className={styles.container} dir={dir}>
         {children}
