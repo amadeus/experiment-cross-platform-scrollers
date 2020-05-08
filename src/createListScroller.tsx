@@ -1,12 +1,12 @@
 import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useState} from 'react';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
-import useVirtualizedContent from './hooks/useVirtualizedContent';
+import useVirtualizedState from './hooks/useVirtualizedState';
 import useAnimatedListScroll from './hooks/useAnimatedListScroll';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
-import type {SectionHeight, RowHeight, FooterHeight, ListItem} from './hooks/useVirtualizedContent';
+import type {SectionHeight, RowHeight, FooterHeight, ListItem} from './hooks/useVirtualizedState';
 import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from './core/SharedTypes';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
@@ -35,7 +35,7 @@ export interface ScrollerListProps extends ScrollerBaseProps {
   // calculation is not uniform, but if it's just a number, than it's uniform
   // uniform?: boolean;
 
-  // NOTE(amadeus): The size in pixels that we should chunk rendering blocks too
+  // NOTE(amadeus): The size in pixels that we should chunk the scrollable region
   chunkSize?: number;
 
   // NOTE(amadeus): Figure out how to annotate onResize since it wont actually
@@ -186,7 +186,7 @@ export default function createListScroller(scrollbarClassName?: string) {
     // Using this for development testing only and can be removed
     const [, setForceUpdate] = useState(0);
     // Using the base scroller data, compute the current list scroller state
-    const {spacerTop, totalHeight, items, listComputer, forceUpdateIfNecessary} = useVirtualizedContent({
+    const {spacerTop, totalHeight, items, listComputer, forceUpdateIfNecessary} = useVirtualizedState({
       sections,
       sectionHeight,
       rowHeight,
