@@ -12,14 +12,19 @@ export interface ScrollToIndexProps extends ScrollToAPI {
   padding?: number;
 }
 
+// Takes the base `useAnimatedScroll` API and adds an additional method to
+// scroll certain section/row indexes into view
+
 export default function useAnimatedListScroll(
   nodeRef: React.RefObject<HTMLElement>,
   getScrollerState: () => ScrollerState,
   listComputer: ListComputer
 ) {
   const {scrollTo, spring, scrollIntoView} = useAnimatedScroll(nodeRef, getScrollerState);
+  // Adds an additional API that's used for the List APIs - takes a section and
+  // an optional row to scroll to
   const scrollToIndex = useCallback(
-    ({section, row, animate = true, callback, padding = 0}: ScrollToIndexProps) => {
+    ({section, row, animate, callback, padding = 0}: ScrollToIndexProps) => {
       const [top, height] = listComputer.computeScrollPosition(section, row);
       scrollIntoView({
         top,

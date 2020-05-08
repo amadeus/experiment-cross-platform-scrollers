@@ -63,7 +63,7 @@ export default class ManualSpring {
     this.clamp = clamp;
   }
 
-  to({to, from, animate = true, callback}: ToProps) {
+  to({to, from, animate = false, callback}: ToProps) {
     this.target = to;
     if (callback != null) {
       this.callbacks.push(callback);

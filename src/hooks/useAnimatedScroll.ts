@@ -12,6 +12,9 @@ export interface ScrollIntoViewProps extends ScrollToAPI {
   padding?: number;
 }
 
+// Using the ManualSpring API, setup various functions that can be used to set
+// scroll position, but animated and immediately
+
 export default function useAnimatedScroll(
   nodeRef: React.RefObject<HTMLElement>,
   getScrollerState: () => ScrollerState
@@ -34,8 +37,10 @@ export default function useAnimatedScroll(
         },
       })
   );
+  // Your basic scrollTo API - give it a target, maybe a callback, even animate
+  // if you want.  Then do the thing
   const scrollTo = useCallback(
-    ({to, animate = true, callback}: ScrollToProps) => {
+    ({to, animate, callback}: ScrollToProps) => {
       const {scrollHeight, offsetHeight, scrollTop} = getScrollerState();
       let toFixed = Math.min(to, scrollHeight - offsetHeight + 1);
       spring.to({
@@ -47,6 +52,8 @@ export default function useAnimatedScroll(
     },
     [getScrollerState, spring]
   );
+  // A bit fancier API - basically take a rectangle and ensure it's in view, if
+  // not, scroll there, with all the optional configuration of the basic API
   const scrollIntoView = useCallback(
     ({top, bottom, padding = 0, animate, callback}: ScrollIntoViewProps) => {
       const {scrollHeight, offsetHeight, scrollTop} = getScrollerState();
