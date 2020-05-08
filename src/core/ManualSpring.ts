@@ -19,6 +19,8 @@ type Callback = (currentValue: number, abort: () => void) => void;
 
 type AnimationCallback = () => any;
 
+// Physics are being calculated at 240 times a second - which will mean
+// probably almost never needing to do multiple frames of interpolation
 const FRAME = 1 / 240;
 
 export default class ManualSpring {
@@ -121,10 +123,13 @@ export default class ManualSpring {
     }
 
     const now = timestamp;
-    // NOTE(amadeus): Never add more than 2 seconds worth of frames...
+    // NOTE(amadeus): Never add more than 2 seconds worth of time... it
+    // probably means something has gone horribly wrong...
     this.accumulator = Math.min((now - this.last) / 1000 + this.accumulator, 2);
 
-    // Replay frames if we skipped em
+    // Physics are de-coupled from framerate.  We calculate them in a set
+    // interval of 1/240 of a second.  Any remainder gets manually interpolated
+    // at the end
     while (this.accumulator > FRAME) {
       this.accumulator -= FRAME;
       const {vel, from, accel} = this.getUpdates(this.vel, this.from);
@@ -135,11 +140,13 @@ export default class ManualSpring {
           (from < this.target && this.from > this.target) ||
           (from > this.target && this.from < this.target))
       ) {
+        // NOTE(amadeus): Remove this when integrating
         console.log('stopping due to clamp');
         this.stop(this.target);
         return;
       }
       if (Math.abs(accel * FRAME) < this.threshold) {
+        // NOTE(amadeus): Remove this when integrating
         console.log('stopping due to threshold');
         this.stop(this.target);
         return;
@@ -147,7 +154,8 @@ export default class ManualSpring {
       this.from = from;
     }
     let {from} = this;
-    // Get the interpolated from value
+    // Interpolate the render based on the remainder which is always less than
+    // a frame
     if (this.accumulator > 0) {
       const {from: _from} = this.getUpdates(this.vel, from);
       const increment = (_from - from) * (this.accumulator / FRAME);
