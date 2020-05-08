@@ -1,4 +1,22 @@
-import type {SectionHeight, RowHeight, FooterHeight, ListState} from '../ScrollerConstants';
+export type SectionHeight = number | ((section: number) => number);
+export type RowHeight = number | ((section: number, row: number) => number);
+export type FooterHeight = number | ((section: number) => number);
+
+export interface ListItem {
+  section: number;
+  row?: number;
+  footer?: boolean;
+
+  // NOTE(amadeus): Do I actually, in effect, need these?
+  // index: numbur;
+  // rowIndex?: number;
+}
+
+export interface ListState {
+  spacerTop: number;
+  totalHeight: number;
+  items: ListItem[];
+}
 
 interface ListComputerProps {
   sectionHeight: SectionHeight;

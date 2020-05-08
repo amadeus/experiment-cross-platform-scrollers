@@ -1,5 +1,5 @@
 import {useRef, useLayoutEffect} from 'react';
-import type {ScrollerSpecs} from '../ScrollerConstants';
+import type {ScrollerSpecs} from '../core/getScrollbarSpecs';
 
 export default function usePaddingFixes(
   paddingFix: boolean,

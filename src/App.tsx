@@ -3,7 +3,7 @@ import createScroller from './createScroller';
 import createListScroller from './createListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
-import type {ScrollerListRef, RenderSection, RenderRow} from './ScrollerConstants';
+import type {ScrollerListRef, RenderSectionFunction, RenderRowFunction} from './createListScroller';
 
 enum ScrollbarSizes {
   NONE = 'NONE',
@@ -29,7 +29,7 @@ const ListThin = createListScroller(styles.thinBase);
 
 const LIST_SECTIONS = [10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92];
 
-const renderSection: RenderSection = ({section}) => {
+const renderSection: RenderSectionFunction = ({section}) => {
   return (
     <div key={`section-${section}`} className={styles.section}>
       Section {section}
@@ -50,7 +50,7 @@ function Row({section, row}: RowProps) {
   );
 }
 
-const renderRow: RenderRow = ({section, row}) => {
+const renderRow: RenderRowFunction = ({section, row}) => {
   return <Row key={`row-${section}-${row}`} section={section} row={row} />;
 };
 

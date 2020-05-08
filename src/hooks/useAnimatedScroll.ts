@@ -1,12 +1,20 @@
 import {useState, useCallback} from 'react';
 import ManualSpring from '../core/ManualSpring';
-import type {ScrollerListState, ScrollToProps, ScrollToIndexProps, ScrollIntoViewProps} from '../ScrollerConstants';
-import type ListComputer from '../core/ListComputer';
+import type {ScrollerState, ScrollToAPI} from '../core/SharedTypes';
+
+export interface ScrollToProps extends ScrollToAPI {
+  to: number;
+}
+
+export interface ScrollIntoViewProps extends ScrollToAPI {
+  top: number;
+  bottom: number;
+  padding?: number;
+}
 
 export default function useAnimatedScroll(
   nodeRef: React.RefObject<HTMLElement>,
-  getScrollerState: () => ScrollerListState,
-  listComputer: ListComputer
+  getScrollerState: () => ScrollerState
 ) {
   const [spring] = useState(
     () =>
@@ -28,11 +36,7 @@ export default function useAnimatedScroll(
   );
   const scrollTo = useCallback(
     ({to, animate = true, callback}: ScrollToProps) => {
-      const {scrollHeight, offsetHeight, scrollTop, dirty} = getScrollerState();
-      if (dirty) {
-        callback != null && callback();
-        return;
-      }
+      const {scrollHeight, offsetHeight, scrollTop} = getScrollerState();
       let toFixed = Math.min(to, scrollHeight - offsetHeight + 1);
       spring.to({
         to: toFixed,
@@ -45,11 +49,7 @@ export default function useAnimatedScroll(
   );
   const scrollIntoView = useCallback(
     ({top, bottom, padding = 0, animate, callback}: ScrollIntoViewProps) => {
-      const {scrollHeight, offsetHeight, scrollTop, dirty} = getScrollerState();
-      if (dirty) {
-        callback != null && callback();
-        return;
-      }
+      const {scrollHeight, offsetHeight, scrollTop} = getScrollerState();
       top -= padding;
       bottom += padding;
       if (top >= scrollTop && bottom <= scrollTop + offsetHeight) {
@@ -76,18 +76,5 @@ export default function useAnimatedScroll(
     },
     [spring, getScrollerState]
   );
-  const scrollToIndex = useCallback(
-    ({section, row, animate = true, callback, padding = 0}: ScrollToIndexProps) => {
-      const [top, height] = listComputer.computeScrollPosition(section, row);
-      scrollIntoView({
-        top,
-        bottom: top + height,
-        padding,
-        animate,
-        callback,
-      });
-    },
-    [listComputer, scrollIntoView]
-  );
-  return {scrollTo, scrollToIndex, scrollIntoView};
+  return {scrollTo, spring, scrollIntoView};
 }

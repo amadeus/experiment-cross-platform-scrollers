@@ -2,24 +2,76 @@ import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, us
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedContent from './hooks/useVirtualizedContent';
-import useAnimatedScroll from './hooks/useAnimatedScroll';
+import useAnimatedListScroll from './hooks/useAnimatedListScroll';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
-import type {
-  ListItem,
-  RenderFooter,
-  RenderRow,
-  RenderSection,
-  ScrollEvent,
-  ScrollerListProps,
-  ScrollerListRef,
-  ScrollerListState,
-  UpdateCallback,
-} from './ScrollerConstants';
+import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
+import type {SectionHeight, RowHeight, FooterHeight, ListItem} from './hooks/useVirtualizedContent';
+import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from './core/SharedTypes';
+
+// ListScroller mimics the API from the Discord List component.  The assumption
+// with a List component is that it can be rendering a tremendous amount of
+// data and therefore should be highly optimized to prevent both dom thrashing
+// and minimize the work react has to do to reconcile new changes.  It also has
+// fairly complex requirements for animated scrolling as well.
+
+export type RenderSectionFunction = (specs: {section: number}) => React.ReactNode;
+export type RenderRowFunction = (specs: {section: number; row: number}) => React.ReactNode;
+export type RenderFooterFunction = (specs: {section: number}) => React.ReactNode;
+
+export interface ScrollerListProps extends ScrollerBaseProps {
+  // NOTE(amadeus): We should probably not have this API if not really needed?
+  // onScrollerStateUpdate?: () => any;
+
+  sections: number[];
+  renderSection: RenderSectionFunction;
+  renderRow: RenderRowFunction;
+  renderFooter?: RenderFooterFunction;
+
+  sectionHeight: SectionHeight;
+  rowHeight: RowHeight;
+  footerHeight?: FooterHeight;
+  // NOTE(amadeus): We could potentially assume a function for height
+  // calculation is not uniform, but if it's just a number, than it's uniform
+  // uniform?: boolean;
+
+  // NOTE(amadeus): The size in pixels that we should chunk rendering blocks too
+  chunkSize?: number;
+
+  // NOTE(amadeus): Figure out how to annotate onResize since it wont actually
+  // have any event associated with it... - or even better... DO WE NEED IT?!
+  // We have the ResizeObserver, so I could see this being useful as an API...
+  // but ideally it's not needed
+  // onResize: () => any;
+
+  // NOTE(amadeus): Should we keep this?
+  paddingTop?: number;
+  paddingBottom?: number;
+
+  'aria-label'?: string;
+  'data-ref-id'?: string;
+  tabIndex?: -1 | 0;
+
+  // NOTE(amadeus): This is used specifically in 1 place in the app, but I
+  // think ideally we should not support it since it can cause issues with
+  // rendering/calculating
+  // children?: React.ReactNode;
+}
+
+export interface ScrollerListRef {
+  getScrollerNode: () => HTMLDivElement | null;
+  getScrollerState: () => ScrollerState;
+  scrollTo: (props: ScrollToProps) => void;
+  scrollIntoView: (props: ScrollIntoViewProps) => void;
+  scrollToIndex: (props: ScrollToIndexProps) => void;
+
+  // NOTE(amadeus): Delete me at some point - this is for testing only
+  forceUpdate: () => void;
+}
 
 const {ResizeObserver} = window;
 
-const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
+const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
   scrollTop: 0,
   scrollHeight: 0,
   offsetHeight: 0,
@@ -28,9 +80,9 @@ const INITIAL_SCROLLER_STATE: ScrollerListState = Object.freeze({
 
 interface RenderListItemProps {
   items: ListItem[];
-  renderSection: RenderSection;
-  renderRow: RenderRow;
-  renderFooter: RenderFooter | undefined;
+  renderSection: RenderSectionFunction;
+  renderRow: RenderRowFunction;
+  renderFooter: RenderFooterFunction | undefined;
   spacerTop: number;
 }
 
@@ -79,8 +131,7 @@ export default function createListScroller(scrollbarClassName?: string) {
           });
         })
       : null;
-
-  return forwardRef(function ScrollerList(
+  return forwardRef<ScrollerListRef, ScrollerListProps>(function ScrollerList(
     {
       className,
       onScroll,
@@ -98,12 +149,25 @@ export default function createListScroller(scrollbarClassName?: string) {
       paddingBottom,
       chunkSize,
       ...props
-    }: ScrollerListProps,
-    ref: React.Ref<ScrollerListRef>
+    },
+    ref
   ) {
+    // Wrapper container that is the scroller
     const scroller = useRef<HTMLDivElement>(null);
+    // Wrapper around the content of the scroller - used for both resize
+    // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);
-    const scrollerState = useRef<ScrollerListState>(INITIAL_SCROLLER_STATE);
+    const scrollerState = useRef<ScrollerState>(INITIAL_SCROLLER_STATE);
+    // A function to get state data from the Scroller div itself.  Heavily
+    // utilizes caching to prevent unnecessary layouts/reflows when many
+    // different things might request the data.  The reason this API exists is
+    // because virtulization and animated scrolling depend heavily on querying
+    // the state of the scroller and we really only want to ever hit the DOM
+    // node if we know the data has somehow changed and there's a reason to.
+    // We use a property on the state called `dirty` that has 3 possible values
+    // 0 = The state is not dirty, and the cached state can be returned.
+    // 1 = Only the scrollTop value has changed and needs to be queried.
+    // 2 = The entire state needs to be queried
     const getScrollerState = useCallback(() => {
       const {current} = scroller;
       const {dirty} = scrollerState.current;
@@ -119,8 +183,10 @@ export default function createListScroller(scrollbarClassName?: string) {
       }
       return scrollerState.current;
     }, []);
+    // Using this for development testing only and can be removed
     const [, setForceUpdate] = useState(0);
-    const [{spacerTop, totalHeight, items}, listComputer, forceUpdateIfNecessary] = useVirtualizedContent({
+    // Using the base scroller data, compute the current list scroller state
+    const {spacerTop, totalHeight, items, listComputer, forceUpdateIfNecessary} = useVirtualizedContent({
       sections,
       sectionHeight,
       rowHeight,
@@ -130,7 +196,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       chunkSize,
       getScrollerState,
     });
-    const {scrollTo, scrollToIndex, scrollIntoView} = useAnimatedScroll(scroller, getScrollerState, listComputer);
+    const {scrollTo, scrollToIndex, scrollIntoView} = useAnimatedListScroll(scroller, getScrollerState, listComputer);
     const markStateDirty = useCallback(
       (dirtyType: 1 | 2 = 2) => {
         if (dirtyType > scrollerState.current.dirty) {

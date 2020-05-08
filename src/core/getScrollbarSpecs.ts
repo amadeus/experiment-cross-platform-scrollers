@@ -1,6 +1,9 @@
-import type {ScrollerSpecs} from '../ScrollerConstants';
-
 type StyleKeys = 'position' | 'top' | 'left' | 'width' | 'height' | 'overflow';
+
+export interface ScrollerSpecs {
+  width: number;
+  height: number;
+}
 
 const OuterStyles: [StyleKeys, string][] = [
   ['position', 'absolute'],

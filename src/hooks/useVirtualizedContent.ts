@@ -1,6 +1,9 @@
 import {useState, useRef, useLayoutEffect, useCallback, useMemo} from 'react';
 import ListComputer from '../core/ListComputer';
-import type {SectionHeight, RowHeight, FooterHeight, ScrollerListState, ListState} from '../ScrollerConstants';
+import type {ScrollerState} from '../core/SharedTypes';
+import type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem} from '../core/ListComputer';
+
+export type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem};
 
 const DEFAULT_BLOCK_STATE = [0, 0];
 
@@ -17,7 +20,7 @@ interface VirtualizedProps {
   chunkSize: number | undefined;
   paddingTop: number | undefined;
   paddingBottom: number | undefined;
-  getScrollerState: () => ScrollerListState;
+  getScrollerState: () => ScrollerState;
 }
 
 function getBlocksFromScrollerState(scrollTop: number, offsetHeight: number, chunkSize: number): [number, number] {
@@ -32,7 +35,10 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   items: [],
 });
 
-type VirtualizedContentValue = [ListState, ListComputer, (fromDirtyType: 1 | 2) => void];
+type VirtualizedContentValue = {
+  listComputer: ListComputer;
+  forceUpdateIfNecessary: (fromDirtyType: 1 | 2) => void;
+} & ListState;
 
 export default function useVirtualizedContent({
   sections,
@@ -45,7 +51,7 @@ export default function useVirtualizedContent({
   getScrollerState,
 }: VirtualizedProps): VirtualizedContentValue {
   const forceUpdate = useForceUpdate();
-  const itemState = useRef<ListState>(DEFAULT_ITEM_STATE);
+  const listState = useRef<ListState>(DEFAULT_ITEM_STATE);
   const [listComputer] = useState(() => new ListComputer());
   const {dirty, scrollTop, offsetHeight} = getScrollerState();
   // If the state is dirty - we skip computation and force an update next tick
@@ -71,11 +77,18 @@ export default function useVirtualizedContent({
     },
     [forceUpdate, chunkSize, getScrollerState]
   );
-  itemState.current = useMemo(() => {
+
+  // NOTE(amadeus): This is potentially a controversial thing - setting a ref
+  // inside of a what would ultimately be a render function. HOWEVER, I don't
+  // think it should realistically have any effect on concurrent mode - the
+  // only effect is that it would cache the last calculated results.  I am also
+  // trying to inquire more to other `experts` because I can easily change this
+  // up to use an effect function to save the ref instead
+  listState.current = useMemo(() => {
     // If state is dirty, it's generally due to initial load, and therefore we
     // should not calculate anything
     if (dirty > 0) {
-      return itemState.current;
+      return listState.current;
     }
     listComputer.mergeProps({sectionHeight, rowHeight, footerHeight, paddingBottom, paddingTop, sections});
     return listComputer.compute(Math.max(0, blockStart * chunkSize), blockEnd * chunkSize);
@@ -92,5 +105,5 @@ export default function useVirtualizedContent({
     listComputer,
     chunkSize,
   ]);
-  return [itemState.current, listComputer, forceUpdateIfNecessary];
+  return {...listState.current, listComputer, forceUpdateIfNecessary};
 }

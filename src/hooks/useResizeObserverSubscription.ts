@@ -1,5 +1,5 @@
 import {useLayoutEffect} from 'react';
-import type {UpdateCallback} from '../ScrollerConstants';
+import type {UpdateCallback} from '../core/SharedTypes';
 
 export default function useResizeObserverSubscription(
   ref: React.RefObject<HTMLElement>,
