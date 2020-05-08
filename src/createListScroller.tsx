@@ -224,7 +224,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       }),
       [getScrollerState, scrollTo, scrollToIndex, scrollIntoView]
     );
-    const spacingRef = usePaddingFixes(paddingFix, orientation, dir, className, scroller, specs);
+    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
     const handleScroll = useCallback(
       (event: ScrollEvent) => {
         markStateDirty(1);

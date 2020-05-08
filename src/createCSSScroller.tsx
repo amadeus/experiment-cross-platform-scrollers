@@ -24,7 +24,7 @@ export default function createScroller(scrollbarClassName?: string) {
     ...props
   }: CSSScrollerProps) {
     const scroller = useRef<HTMLDivElement>(null);
-    const spacingRef = usePaddingFixes(paddingFix, orientation, dir, className, scroller, specs);
+    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
     const classes = [
       orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
       scrollbarClassName,
