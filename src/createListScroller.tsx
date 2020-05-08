@@ -206,8 +206,8 @@ export default function createListScroller(scrollbarClassName?: string) {
       },
       [forceUpdateIfNecessary]
     );
-    useResizeObserverSubscription(scroller, markStateDirty, resizeObserver, listenerMap);
-    useResizeObserverSubscription(content, markStateDirty, resizeObserver, listenerMap);
+    useResizeObserverSubscription({ref: scroller, onUpdate: markStateDirty, resizeObserver, listenerMap});
+    useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useImperativeHandle<ScrollerListRef, ScrollerListRef>(
       ref,
       () => ({
