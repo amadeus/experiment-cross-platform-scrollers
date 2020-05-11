@@ -3,7 +3,12 @@ import createScroller from './createScroller';
 import createListScroller from './createListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
-import type {ScrollerListRef, RenderSectionFunction, RenderRowFunction} from './createListScroller';
+import type {
+  ScrollerListRef,
+  RenderSectionFunction,
+  RenderRowFunction,
+  RenderWrapperFunction,
+} from './createListScroller';
 
 enum ScrollbarSizes {
   NONE = 'NONE',
@@ -52,6 +57,14 @@ function Row({section, row}: RowProps) {
 
 const renderRow: RenderRowFunction = ({section, row}) => {
   return <Row key={`row-${section}-${row}`} section={section} row={row} />;
+};
+
+const wrapSection: RenderWrapperFunction = (section, children) => {
+  return (
+    <div key={`section-wrapper-${section}`} data-section={section}>
+      {children}
+    </div>
+  );
 };
 
 function useIsScrolling(): [boolean, () => void] {
@@ -165,6 +178,7 @@ export default function App() {
         sections={LIST_SECTIONS}
         renderSection={renderSection}
         renderRow={renderRow}
+        wrapSection={wrapSection}
         sectionHeight={48}
         rowHeight={24}
         paddingBottom={8}

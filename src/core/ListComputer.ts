@@ -2,15 +2,26 @@ export type SectionHeight = number | ((section: number) => number);
 export type RowHeight = number | ((section: number, row: number) => number);
 export type FooterHeight = number | ((section: number) => number);
 
-export interface ListItem {
+export type ListItemSection = {
+  type: 'section';
   section: number;
-  row?: number;
-  footer?: boolean;
+  listIndex: number;
+};
 
-  // NOTE(amadeus): Do I actually, in effect, need these?
-  // index: numbur;
-  // rowIndex?: number;
-}
+export type ListItemRow = {
+  type: 'row';
+  section: number;
+  row: number;
+  rowIndex: number;
+  listIndex: number;
+};
+
+export type ListItemFooter = {
+  type: 'footer';
+  section: number;
+};
+
+export type ListItem = ListItemSection | ListItemRow | ListItemFooter;
 
 export interface ListState {
   spacerTop: number;
@@ -84,9 +95,10 @@ class ListComputer {
   compute(top: number, bottom: number): ListState {
     let height = this.paddingTop;
     let spacerTop = this.paddingTop;
-    const items = [];
-
-    function isVisible(itemHeight: number) {
+    let rowIndex = 0;
+    let listIndex = 0;
+    const items: ListItem[] = [];
+    const isVisible = (itemHeight: number) => {
       const prevHeight = height;
       height += itemHeight;
       if (height < top) {
@@ -97,12 +109,8 @@ class ListComputer {
       } else {
         return true;
       }
-    }
+    };
 
-    // NOTE(amadeus): Are we sure we need this?  Attempt to implement without
-    // this stuff and see if it is needed later
-    // let rowIndex = 0;
-    // let index = 0;
     for (let section = 0; section < this.sections.length; section++) {
       const rows = this.sections[section];
 
@@ -111,35 +119,31 @@ class ListComputer {
       }
 
       if (isVisible(this.getHeightForSection(section))) {
-        // items.push({section, index});
-        items.push({section});
+        items.push({type: 'section', section, listIndex});
       }
-      // index += 1;
+      listIndex += 1;
 
       if (this.uniform) {
         const rowHeight = this.getHeightForRow(section, 0);
         for (let row = 0; row < rows; row++) {
           if (isVisible(rowHeight)) {
-            // items.push({section, index, row, rowIndex});
-            items.push({section, row});
+            items.push({type: 'row', section, listIndex, row, rowIndex});
           }
-          // rowIndex += 1;
-          // index += 1;
+          rowIndex += 1;
+          listIndex += 1;
         }
       } else {
         for (let row = 0; row < rows; row++) {
           if (isVisible(this.getHeightForRow(section, row))) {
-            // items.push({section, index, row, rowIndex});
-            items.push({section, row});
+            items.push({type: 'row', section, listIndex, row, rowIndex});
           }
-          // rowIndex += 1;
-          // index += 1;
+          rowIndex += 1;
+          listIndex += 1;
         }
       }
 
       if (isVisible(this.getHeightForFooter(section))) {
-        // items.push({section, index, footer: true});
-        items.push({section, footer: true});
+        items.push({type: 'footer', section});
       }
     }
 

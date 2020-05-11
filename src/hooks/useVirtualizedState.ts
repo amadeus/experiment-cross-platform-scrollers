@@ -1,9 +1,18 @@
 import {useState, useRef, useLayoutEffect, useCallback, useMemo} from 'react';
 import ListComputer from '../core/ListComputer';
 import type {ScrollerState} from '../core/SharedTypes';
-import type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem} from '../core/ListComputer';
+import type {
+  SectionHeight,
+  RowHeight,
+  FooterHeight,
+  ListState,
+  ListItem,
+  ListItemSection,
+  ListItemRow,
+  ListItemFooter,
+} from '../core/ListComputer';
 
-export type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem};
+export type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem, ListItemSection, ListItemRow, ListItemFooter};
 
 const DEFAULT_CHUNK_STATE = [0, 0];
 

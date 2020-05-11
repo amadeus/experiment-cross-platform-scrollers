@@ -6,7 +6,15 @@ import useAnimatedListScroll from './hooks/useAnimatedListScroll';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
-import type {SectionHeight, RowHeight, FooterHeight, ListItem} from './hooks/useVirtualizedState';
+import type {
+  SectionHeight,
+  RowHeight,
+  FooterHeight,
+  ListItem,
+  ListItemSection,
+  ListItemRow,
+  ListItemFooter,
+} from './hooks/useVirtualizedState';
 import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from './core/SharedTypes';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
@@ -15,9 +23,10 @@ import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from
 // and minimize the work react has to do to reconcile new changes.  It also has
 // fairly complex requirements for animated scrolling as well.
 
-export type RenderSectionFunction = (specs: {section: number}) => React.ReactNode;
-export type RenderRowFunction = (specs: {section: number; row: number}) => React.ReactNode;
-export type RenderFooterFunction = (specs: {section: number}) => React.ReactNode;
+export type RenderSectionFunction = (item: ListItemSection) => React.ReactNode;
+export type RenderRowFunction = (item: ListItemRow) => React.ReactNode;
+export type RenderFooterFunction = (item: ListItemFooter) => React.ReactNode;
+export type RenderWrapperFunction = (section: number, children: React.ReactNode) => React.ReactNode;
 
 export interface ScrollerListProps extends ScrollerBaseProps {
   // NOTE(amadeus): We should probably not have this API if not really needed?
@@ -27,6 +36,7 @@ export interface ScrollerListProps extends ScrollerBaseProps {
   renderSection: RenderSectionFunction;
   renderRow: RenderRowFunction;
   renderFooter?: RenderFooterFunction;
+  wrapSection?: RenderWrapperFunction;
 
   sectionHeight: SectionHeight;
   rowHeight: RowHeight;
@@ -83,6 +93,7 @@ interface RenderListItemProps {
   renderSection: RenderSectionFunction;
   renderRow: RenderRowFunction;
   renderFooter: RenderFooterFunction | undefined;
+  wrapSection: RenderWrapperFunction | undefined;
   spacerTop: number;
 }
 
@@ -90,31 +101,33 @@ function renderListItems({
   renderSection,
   renderRow,
   renderFooter,
+  wrapSection,
   items,
   spacerTop,
 }: RenderListItemProps): React.ReactNode {
   const content: React.ReactNodeArray = [<div style={{height: spacerTop}} key="list-spacer-top" />];
   let sectionItems: React.ReactNodeArray = [];
-  // let lastSection = 0;
-  items.forEach(({section, row, footer}) => {
-    if (footer === true) {
-      // sectionItems.push(renderFooter({section, index}));
-      // content.push(wrapSection != null ? wrapSection(lastSection, sectionItems) : sectionItems);
-      renderFooter != null && sectionItems.push(renderFooter({section}));
-      content.push(sectionItems);
+  let lastSection: number = 0;
+  items.forEach((item) => {
+    if (item.section !== lastSection && sectionItems.length > 0) {
+      content.push(wrapSection != null ? wrapSection(lastSection, sectionItems) : sectionItems);
       sectionItems = [];
-    } else {
-      // lastSection = section;
-      if (row == null) {
-        sectionItems.push(renderSection({section}));
-      } else {
-        sectionItems.push(renderRow({section, row}));
-      }
+    }
+    lastSection = item.section;
+    switch (item.type) {
+      case 'section':
+        sectionItems.push(renderSection(item));
+        break;
+      case 'row':
+        sectionItems.push(renderRow(item));
+        break;
+      case 'footer':
+        renderFooter != null && sectionItems.push(renderFooter(item));
+        break;
     }
   });
   if (sectionItems.length > 0) {
-    // content.push(wrapSection ? wrapSection(lastSection, sectionItems) : sectionItems);
-    content.push(sectionItems);
+    content.push(wrapSection ? wrapSection(lastSection, sectionItems) : sectionItems);
   }
   return content;
 }
@@ -145,6 +158,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       renderSection,
       renderRow,
       renderFooter,
+      wrapSection,
       paddingTop,
       paddingBottom,
       chunkSize,
@@ -242,10 +256,10 @@ export default function createListScroller(scrollbarClassName?: string) {
         {useMemo(
           () => (
             <div ref={content} style={{height: totalHeight}}>
-              {renderListItems({items, renderSection, renderRow, renderFooter, spacerTop})}
+              {renderListItems({items, renderSection, renderRow, renderFooter, wrapSection, spacerTop})}
             </div>
           ),
-          [items, renderSection, renderRow, renderFooter, totalHeight, spacerTop]
+          [items, renderSection, renderRow, renderFooter, wrapSection, totalHeight, spacerTop]
         )}
         {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>
