@@ -155,6 +155,15 @@ export default function App() {
     classes.push(styles.scrolling);
   }
 
+  const [chunkSize, setChunkSize] = useState(256);
+  const handleChunkChange = useCallback(({currentTarget}) => {
+    let value = parseInt(currentTarget.value);
+    if (isNaN(value)) {
+      value = 256;
+    }
+    setChunkSize(value);
+  }, []);
+
   return (
     <div dir={dir} className={styles.wrapper}>
       <div className={styles.tools}>
@@ -167,6 +176,7 @@ export default function App() {
         </select>
         <button onClick={handleClick}>Add Item</button>
         <button onClick={toggleScroll}>Toggle Scroll</button>
+        <input type="text" value={chunkSize} onChange={handleChunkChange} />
       </div>
       <Scroller className={styles.container} dir={dir}>
         {children}
@@ -182,6 +192,7 @@ export default function App() {
         sectionHeight={48}
         rowHeight={24}
         paddingBottom={8}
+        chunkSize={chunkSize}
       />
     </div>
   );
