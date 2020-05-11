@@ -154,7 +154,7 @@ class ListComputer {
     };
   }
 
-  computeScrollPosition(targetSection: number, targetRow?: number | undefined) {
+  computeScrollPosition(targetSection: number, targetRow?: number | undefined): [number, number] {
     const {paddingTop} = this;
     let scrollTop = paddingTop;
     let section = 0;

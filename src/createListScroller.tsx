@@ -1,4 +1,4 @@
-import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useState} from 'react';
+import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect} from 'react';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedState from './hooks/useVirtualizedState';
@@ -74,9 +74,10 @@ export interface ScrollerListRef {
   scrollTo: (props: ScrollToProps) => void;
   scrollIntoView: (props: ScrollIntoViewProps) => void;
   scrollToIndex: (props: ScrollToIndexProps) => void;
-
-  // NOTE(amadeus): Delete me at some point - this is for testing only
-  forceUpdate: () => void;
+  isItemVisible: (section: number, row?: number | undefined) => boolean;
+  getScrollPosition: (section: number, row?: number | undefined, completely?: boolean) => [number, number];
+  getItems: () => ListItem[];
+  getSectionRowFromIndex: (index: number) => [number, number];
 }
 
 const {ResizeObserver} = window;
@@ -87,6 +88,32 @@ const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
   offsetHeight: 0,
   dirty: 2,
 });
+
+// NOTE(amadeus): Can we deprecate this?
+function useGetItems(items: ListItem[]) {
+  const itemsRef = useRef(items);
+  useEffect(() => void (itemsRef.current = items), [items]);
+  return useCallback(() => itemsRef.current, []);
+}
+
+// NOTE(amadeus): Can we deprecate this?
+function useGetSectionRowFromIndex(sections: number[]) {
+  const sectionsRef = useRef(sections);
+  useEffect(() => void (sectionsRef.current = sections), [sections]);
+  return useCallback((index: number): [number, number] => {
+    const {current: sections} = sectionsRef;
+    let sectionSum = 0;
+    for (let section = 0; section < sections.length; section++) {
+      const sectionSize = sections[section];
+      if (sectionSum <= index && sectionSum + sectionSize >= index) {
+        const row = index - sectionSum;
+        return [section, row];
+      }
+      sectionSum += sectionSize;
+    }
+    return [0, 0];
+  }, []);
+}
 
 interface RenderListItemProps {
   items: ListItem[];
@@ -197,8 +224,6 @@ export default function createListScroller(scrollbarClassName?: string) {
       }
       return scrollerState.current;
     }, []);
-    // Using this for development testing only and can be removed
-    const [, setForceUpdate] = useState(0);
     // Using the base scroller data, compute the current list scroller state
     const {spacerTop, totalHeight, items, listComputer, forceUpdateIfNecessary} = useVirtualizedState({
       sections,
@@ -210,7 +235,11 @@ export default function createListScroller(scrollbarClassName?: string) {
       chunkSize,
       getScrollerState,
     });
-    const {scrollTo, scrollToIndex, scrollIntoView} = useAnimatedListScroll(scroller, getScrollerState, listComputer);
+    const {scrollTo, scrollToIndex, scrollIntoView, isItemVisible, getScrollPosition} = useAnimatedListScroll(
+      scroller,
+      getScrollerState,
+      listComputer
+    );
     const markStateDirty = useCallback(
       (dirtyType: 1 | 2 = 2) => {
         if (dirtyType > scrollerState.current.dirty) {
@@ -222,6 +251,8 @@ export default function createListScroller(scrollbarClassName?: string) {
     );
     useResizeObserverSubscription({ref: scroller, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
+    const getItems = useGetItems(items);
+    const getSectionRowFromIndex = useGetSectionRowFromIndex(sections);
     useImperativeHandle<ScrollerListRef, ScrollerListRef>(
       ref,
       () => ({
@@ -230,13 +261,24 @@ export default function createListScroller(scrollbarClassName?: string) {
         },
         getScrollerState,
         scrollTo,
+        scrollIntoView,
+        scrollToIndex,
+        isItemVisible,
+        getScrollPosition,
+        // NOTE(amadeus): It would be nice to not surface this API :X
+        getItems,
+        getSectionRowFromIndex,
+      }),
+      [
+        getScrollerState,
+        scrollTo,
         scrollToIndex,
         scrollIntoView,
-        forceUpdate() {
-          setForceUpdate((a) => a + 1);
-        },
-      }),
-      [getScrollerState, scrollTo, scrollToIndex, scrollIntoView]
+        isItemVisible,
+        getScrollPosition,
+        getItems,
+        getSectionRowFromIndex,
+      ]
     );
     const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
     const handleScroll = useCallback(
