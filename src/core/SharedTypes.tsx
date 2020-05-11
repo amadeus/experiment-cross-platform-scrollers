@@ -4,19 +4,12 @@ export type UpdateCallback = () => void;
 export type ScrollEvent = React.UIEvent<HTMLDivElement, UIEvent>;
 export type ScrollHandler = (event: ScrollEvent) => void;
 
-export interface ScrollerBaseProps {
-  className?: string | null | undefined;
+export interface ScrollerBaseProps
+  extends React.PropsWithoutRef<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {
+  // className?: string | null | undefined;
   dir?: 'rtl' | 'ltr';
   orientation?: 'vertical' | 'horizontal' | 'auto';
   paddingFix?: boolean;
-
-  onScroll?: ScrollHandler;
-  onKeyDown?: (event: React.KeyboardEvent) => any;
-  onKeyPress?: (event: React.KeyboardEvent) => any;
-  onKeyUp?: (event: React.KeyboardEvent) => any;
-  onFocus?: (event: React.FocusEvent) => any;
-  onBlur?: (event: React.FocusEvent) => any;
-  style?: React.CSSProperties;
 }
 
 export interface ScrollerState {
