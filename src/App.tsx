@@ -164,6 +164,11 @@ export default function App() {
     setChunkSize(value);
   }, []);
 
+  const [wrapSectionsBool, setWrapSections] = useState(true);
+  const handleWrapChange = useCallback(({currentTarget}) => {
+    setWrapSections(currentTarget.checked);
+  }, []);
+
   return (
     <div dir={dir} className={styles.wrapper}>
       <div className={styles.tools}>
@@ -176,7 +181,11 @@ export default function App() {
         </select>
         <button onClick={handleClick}>Add Item</button>
         <button onClick={toggleScroll}>Toggle Scroll</button>
-        <input type="text" value={chunkSize} onChange={handleChunkChange} />
+        <input type="text" value={chunkSize} onChange={handleChunkChange} className={styles.input} />
+        <label>
+          <input type="checkbox" checked={wrapSectionsBool} onChange={handleWrapChange} />
+          wrap sections
+        </label>
       </div>
       <Scroller className={styles.container} dir={dir}>
         {children}
@@ -188,7 +197,7 @@ export default function App() {
         sections={LIST_SECTIONS}
         renderSection={renderSection}
         renderRow={renderRow}
-        wrapSection={wrapSection}
+        wrapSection={wrapSectionsBool ? wrapSection : undefined}
         sectionHeight={48}
         rowHeight={24}
         paddingBottom={8}
