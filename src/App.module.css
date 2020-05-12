@@ -29,6 +29,10 @@
   margin: 1px 0 1px;
 }
 
+.input {
+  width: 75px;
+}
+
 .horizontalContainer .item + .item {
   margin-left: 1px;
 }
