@@ -63,6 +63,9 @@ export default function useVirtualizedState({
   paddingBottom = 0,
   getScrollerState,
 }: VirtualizedStateProps): VirtualizedState {
+  if (process.env.NODE_ENV === 'development' && chunkSize === 0) {
+    throw new Error('createListScroller: chunkSize must be greater than 0');
+  }
   const forceUpdate = useForceUpdate();
   const listState = useRef<ListState>(DEFAULT_ITEM_STATE);
   const [listComputer] = useState(() => new ListComputer());
