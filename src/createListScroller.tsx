@@ -1,9 +1,7 @@
 import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect} from 'react';
-import usePaddingFixes from './hooks/usePaddingFixes';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedState from './hooks/useVirtualizedState';
 import useAnimatedListScroll from './hooks/useAnimatedListScroll';
-import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
 import type {
@@ -28,7 +26,7 @@ export type RenderRowFunction = (item: ListItemRow) => React.ReactNode;
 export type RenderFooterFunction = (item: ListItemFooter) => React.ReactNode;
 export type RenderWrapperFunction = (section: number, children: React.ReactNode) => React.ReactNode;
 
-export interface ScrollerListProps extends ScrollerBaseProps {
+export interface ListScrollerProps extends ScrollerBaseProps {
   // NOTE(amadeus): We should probably not have this API if not really needed?
   // onScrollerStateUpdate?: () => any;
 
@@ -68,7 +66,7 @@ export interface ScrollerListProps extends ScrollerBaseProps {
   // children?: React.ReactNode;
 }
 
-export interface ScrollerListRef {
+export interface ListScrollerRef {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerState;
   scrollTo: (props: ScrollToProps) => void;
@@ -160,7 +158,6 @@ function renderListItems({
 }
 
 export default function createListScroller(scrollbarClassName?: string) {
-  const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, UpdateCallback>();
   const resizeObserver =
     ResizeObserver != null
@@ -171,7 +168,7 @@ export default function createListScroller(scrollbarClassName?: string) {
           });
         })
       : null;
-  return forwardRef<ScrollerListRef, ScrollerListProps>(function ScrollerList(
+  return forwardRef<ListScrollerRef, ListScrollerProps>(function ListScroller(
     {
       className,
       onScroll,
@@ -253,7 +250,7 @@ export default function createListScroller(scrollbarClassName?: string) {
     useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
     const getItems = useGetItems(items);
     const getSectionRowFromIndex = useGetSectionRowFromIndex(sections);
-    useImperativeHandle<ScrollerListRef, ScrollerListRef>(
+    useImperativeHandle<ListScrollerRef, ListScrollerRef>(
       ref,
       () => ({
         getScrollerNode() {
@@ -280,7 +277,6 @@ export default function createListScroller(scrollbarClassName?: string) {
         getSectionRowFromIndex,
       ]
     );
-    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
     const handleScroll = useCallback(
       (event: ScrollEvent) => {
         markStateDirty(1);
@@ -303,7 +299,6 @@ export default function createListScroller(scrollbarClassName?: string) {
           ),
           [items, renderSection, renderRow, renderFooter, wrapSection, totalHeight, spacerTop]
         )}
-        {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>
     );
   });

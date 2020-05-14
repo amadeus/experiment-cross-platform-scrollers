@@ -4,7 +4,7 @@ import createListScroller from './createListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
 import type {
-  ScrollerListRef,
+  ListScrollerRef,
   RenderSectionFunction,
   RenderRowFunction,
   RenderWrapperFunction,
@@ -90,7 +90,7 @@ function useIsScrolling(): [boolean, () => void] {
 }
 
 export default function App() {
-  const ref = useRef<ScrollerListRef>(null);
+  const ref = useRef<ListScrollerRef>(null);
   const [size, setSize] = useState<ScrollbarSizes>(ScrollbarSizes.THIN);
   const [dir, setDir] = useState<'ltr' | 'rtl'>('ltr');
   const handleScrollbarChange = useCallback(({currentTarget: {value}}) => {
