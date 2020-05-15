@@ -1,5 +1,7 @@
-import {useState, useRef, useLayoutEffect, useCallback, useMemo} from 'react';
+import {useState, useRef, useMemo} from 'react';
 import ListComputer from '../core/ListComputer';
+import useForceUpdate from './useForceUpdate';
+import useScrollChunkState from './useScrollChunkState';
 import type {ScrollerState} from '../core/SharedTypes';
 import type {
   SectionHeight,
@@ -14,13 +16,6 @@ import type {
 
 export type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem, ListItemSection, ListItemRow, ListItemFooter};
 
-const DEFAULT_CHUNK_STATE = [0, 0];
-
-function useForceUpdate() {
-  const [, updateState] = useState(0);
-  return useCallback(() => updateState((a) => a + 1), []);
-}
-
 interface VirtualizedStateProps {
   sections: number[];
   sectionHeight: SectionHeight;
@@ -32,12 +27,6 @@ interface VirtualizedStateProps {
   getScrollerState: () => ScrollerState;
 }
 
-function getChunksFromScrollerState(scrollTop: number, offsetHeight: number, chunkSize: number): [number, number] {
-  const chunkStart = Math.floor(scrollTop / chunkSize) - 1;
-  const chunkEnd = Math.ceil((scrollTop + offsetHeight) / chunkSize) + 1;
-  return [chunkStart, chunkEnd];
-}
-
 const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   spacerTop: 0,
   totalHeight: 0,
@@ -46,7 +35,7 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
 
 type VirtualizedState = {
   listComputer: ListComputer;
-  forceUpdateIfNecessary: (fromDirtyType: 1 | 2) => void;
+  forceUpdateOnChunkChange: (fromDirtyType: 1 | 2) => void;
 } & ListState;
 
 // useVirtualizedState takes in a core part of the List props and manages a
@@ -69,30 +58,11 @@ export default function useVirtualizedState({
   const forceUpdate = useForceUpdate();
   const listState = useRef<ListState>(DEFAULT_ITEM_STATE);
   const [listComputer] = useState(() => new ListComputer());
-  const {dirty, scrollTop, offsetHeight} = getScrollerState();
-  // If the state is dirty - we skip computation and force an update next tick
-  useLayoutEffect(() => void (dirty && forceUpdate()), [dirty, forceUpdate]);
-  const chunkState = useRef(DEFAULT_CHUNK_STATE);
-  chunkState.current = getChunksFromScrollerState(scrollTop, offsetHeight, chunkSize);
-  const [chunkStart, chunkEnd] = chunkState.current;
-  const forceUpdateIfNecessary = useCallback(
-    (fromDirtyType: 1 | 2) => {
-      const {dirty, scrollTop, offsetHeight} = getScrollerState();
-      // If state returned dirty, then that means we are still in the first
-      // tick and should quit out early (or something has gone horribly wrong
-      // and we can't trust the current state)
-      if (dirty > 0) return;
-      const [chunkStart, chunkEnd] = getChunksFromScrollerState(scrollTop, offsetHeight, chunkSize);
-      // If we are updating from a scroll type event, then we only want to
-      // check against the first chunk to optimize away unneeded updates
-      if (chunkStart !== chunkState.current[0]) {
-        forceUpdate();
-      } else if (fromDirtyType === 2 && chunkEnd !== chunkState.current[1]) {
-        forceUpdate();
-      }
-    },
-    [forceUpdate, chunkSize, getScrollerState]
-  );
+  const {dirty, chunkStart, chunkEnd, forceUpdateOnChunkChange} = useScrollChunkState({
+    chunkSize,
+    getScrollerState,
+    forceUpdate,
+  });
 
   // NOTE(amadeus): This is potentially a controversial thing - setting a ref
   // inside of a what would ultimately be a render function. HOWEVER, I don't
@@ -121,5 +91,5 @@ export default function useVirtualizedState({
     listComputer,
     chunkSize,
   ]);
-  return {...listState.current, listComputer, forceUpdateIfNecessary};
+  return {...listState.current, listComputer, forceUpdateOnChunkChange};
 }

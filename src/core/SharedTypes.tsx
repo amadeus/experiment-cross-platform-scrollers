@@ -14,8 +14,11 @@ export interface ScrollerBaseProps
 
 export interface ScrollerState {
   scrollTop: number;
+  scrollLeft: number;
   scrollHeight: number;
+  scrollWidth: number;
   offsetHeight: number;
+  offsetWidth: number;
   // A bit of context on the use of two dirty states.  Querying scrollTop on an
   // element is much cheaper than querying offsetHeight and scrollHeight.
   // Therefore we track 2 different types of dirty states, to better track when

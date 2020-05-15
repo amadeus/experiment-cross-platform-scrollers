@@ -82,8 +82,11 @@ const {ResizeObserver} = window;
 
 const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
   scrollTop: 0,
+  scrollLeft: 0,
   scrollHeight: 0,
+  scrollWidth: 0,
   offsetHeight: 0,
+  offsetWidth: 0,
   dirty: 2,
 });
 
@@ -213,16 +216,16 @@ export default function createListScroller(scrollbarClassName?: string) {
         return scrollerState.current;
       }
       if (dirty === 1) {
-        const {scrollTop} = current;
-        scrollerState.current = {...scrollerState.current, scrollTop, dirty: 0};
+        const {scrollTop, scrollLeft} = current;
+        scrollerState.current = {...scrollerState.current, scrollTop, scrollLeft, dirty: 0};
       } else {
-        const {scrollTop, scrollHeight, offsetHeight} = current;
-        scrollerState.current = {scrollTop, scrollHeight, offsetHeight, dirty: 0};
+        const {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth} = current;
+        scrollerState.current = {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth, dirty: 0};
       }
       return scrollerState.current;
     }, []);
     // Using the base scroller data, compute the current list scroller state
-    const {spacerTop, totalHeight, items, listComputer, forceUpdateIfNecessary} = useVirtualizedState({
+    const {spacerTop, totalHeight, items, listComputer, forceUpdateOnChunkChange} = useVirtualizedState({
       sections,
       sectionHeight,
       rowHeight,
@@ -241,10 +244,10 @@ export default function createListScroller(scrollbarClassName?: string) {
       (dirtyType: 1 | 2 = 2) => {
         if (dirtyType > scrollerState.current.dirty) {
           scrollerState.current.dirty = dirtyType;
-          forceUpdateIfNecessary(dirtyType);
+          forceUpdateOnChunkChange(dirtyType);
         }
       },
-      [forceUpdateIfNecessary]
+      [forceUpdateOnChunkChange]
     );
     useResizeObserverSubscription({ref: scroller, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
