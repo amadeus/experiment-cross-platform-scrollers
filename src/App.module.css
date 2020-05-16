@@ -135,28 +135,31 @@
   height: 0;
 }
 
-.auto {
+.autoBase {
   composes: scrollbar;
-  padding: 16px;
+  padding-left: 16px;
+  padding-right: 16px;
   scrollbar-width: auto;
 }
 
-.auto::-webkit-scrollbar {
+.autoBase::-webkit-scrollbar {
   width: 16px;
   height: 16px;
 }
 
-.auto::-webkit-scrollbar-thumb {
+.autoBase::-webkit-scrollbar-thumb {
   border: 4px solid transparent;
   border-radius: 8px;
 }
 
-.none {
+.noneBase {
   composes: scrollbar;
   scrollbar-width: none;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
-.none::-webkit-scrollbar {
+.noneBase::-webkit-scrollbar {
   width: 0;
   height: 0;
 }
@@ -179,8 +182,20 @@
   border: 2px solid transparent;
 }
 
+.none {
+  composes: noneBase;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
 .thin {
   composes: thinBase;
   padding-top: 8px;
   padding-bottom: 8px;
+}
+
+.auto {
+  composes: autoBase;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }

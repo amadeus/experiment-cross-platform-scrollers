@@ -108,6 +108,7 @@ export default class MasonryListComputer {
     this.getSectionHeight = getSectionHeight;
     this.getItemHeight = getItemHeight;
     this.getFooterHeight = getFooterHeight;
+    this.bufferWidth = bufferWidth;
   }
 
   computeFullCoords() {
@@ -126,7 +127,7 @@ export default class MasonryListComputer {
       // Sections are full width - regardless of number of columns, so we need
       // to figure out the tallest column height, and use that as a basis going
       // forward
-      const sectionTop = this.getMaxColumnHeight(this.columnHeights) + gutterSize;
+      const sectionTop = this.getMaxColumnHeight(this.columnHeights);
       const sectionHeight = getSectionHeight(section);
       for (let i = 0; i < this.columnHeights.length; i++) {
         this.columnHeights[i] = sectionTop + sectionHeight;
@@ -143,7 +144,7 @@ export default class MasonryListComputer {
         const top = columnHeight + gutterSize;
         const coords: UnitCoords = {
           position: 'absolute',
-          left: this.columnWidth * columnIndex + gutterSize * (columnIndex + 1),
+          left: this.columnWidth * columnIndex + gutterSize * (columnIndex + 1) - gutterSize,
           width: this.columnWidth,
           top: top - sectionTop,
           height,

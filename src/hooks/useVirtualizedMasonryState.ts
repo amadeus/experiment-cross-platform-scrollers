@@ -29,11 +29,13 @@ interface VirtualizedMasonryProps {
   getFooterHeight?: GetFooterHeight | undefined;
   chunkSize: number | undefined;
   getScrollerState: () => ScrollerState;
+  gutterSize: number;
 }
 
 interface VirtualizedMasonryState extends MasonryComputerState {
   masonryComputer: MasonryListComputer;
   forceUpdateOnChunkChange: (dirtyType: 1 | 2) => void;
+  forceUpdate: () => void;
 }
 
 export default function useVirtualizedMasonryState({
@@ -45,10 +47,13 @@ export default function useVirtualizedMasonryState({
   getFooterHeight,
   chunkSize = 250,
   getScrollerState,
+  gutterSize,
 }: VirtualizedMasonryProps): VirtualizedMasonryState {
   const forceUpdate = useForceUpdate();
   const masonryState = useRef<MasonryComputerState>(DEFAULT_ITEM_STATE);
   const [masonryComputer] = useState(() => new MasonryListComputer());
+  const scrollerState = getScrollerState();
+  const {offsetWidth: bufferWidth} = scrollerState;
   const {dirty, chunkStart, chunkEnd, forceUpdateOnChunkChange} = useScrollChunkState({
     chunkSize,
     getScrollerState,
@@ -59,7 +64,6 @@ export default function useVirtualizedMasonryState({
     if (dirty > 0) {
       return masonryState.current;
     }
-    const {offsetWidth: bufferWidth} = getScrollerState();
     masonryComputer.mergeProps({
       sections,
       columns,
@@ -68,6 +72,7 @@ export default function useVirtualizedMasonryState({
       getSectionHeight,
       getFooterHeight,
       bufferWidth,
+      gutterSize,
     });
     masonryComputer.computeVisibleSections(Math.max(0, chunkStart * chunkSize), chunkEnd * chunkSize);
     return masonryComputer.getState();
@@ -80,11 +85,12 @@ export default function useVirtualizedMasonryState({
     getItemHeight,
     getSectionHeight,
     getFooterHeight,
-    getScrollerState,
     chunkStart,
     chunkEnd,
     chunkSize,
+    gutterSize,
+    bufferWidth,
   ]);
 
-  return {...masonryState.current, masonryComputer, forceUpdateOnChunkChange};
+  return {...masonryState.current, masonryComputer, forceUpdateOnChunkChange, forceUpdate};
 }

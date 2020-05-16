@@ -1,8 +1,10 @@
 import React, {useState, useRef, useEffect, useCallback, useMemo} from 'react';
 import createScroller from './createScroller';
 import createListScroller from './createListScroller';
+import createMasonryListScroller from './createMasonryListScroller';
 import generateRow from './generateRow';
 import styles from './App.module.css';
+import cats from './cats.js';
 import type {
   ListScrollerRef,
   RenderSectionFunction,
@@ -16,10 +18,23 @@ enum ScrollbarSizes {
   AUTO = 'AUTO',
 }
 
-const ScrollerNone = createScroller(styles.none);
-const ScrollerThin = createScroller(styles.thin);
-const ScrollerAuto = createScroller(styles.auto);
-const ListThin = createListScroller(styles.thinBase);
+const BasicScrollers = Object.freeze({
+  [ScrollbarSizes.NONE]: createScroller(styles.none),
+  [ScrollbarSizes.THIN]: createScroller(styles.thin),
+  [ScrollbarSizes.AUTO]: createScroller(styles.auto),
+});
+
+const ListScrollers = Object.freeze({
+  [ScrollbarSizes.NONE]: createListScroller(styles.noneBase),
+  [ScrollbarSizes.THIN]: createListScroller(styles.thinBase),
+  [ScrollbarSizes.AUTO]: createListScroller(styles.autoBase),
+});
+
+const MasonryListScrollers = Object.freeze({
+  [ScrollbarSizes.NONE]: createMasonryListScroller(styles.noneBase),
+  [ScrollbarSizes.THIN]: createMasonryListScroller(styles.thinBase),
+  [ScrollbarSizes.AUTO]: createMasonryListScroller(styles.autoBase),
+});
 
 // There are a few various contexts we need to be able to support
 // * Chrome - supports custom scrollbar styles which automatically pad the
@@ -66,6 +81,23 @@ const wrapSection: RenderWrapperFunction = (section, children) => {
     </div>
   );
 };
+
+const renderItem = (key: string, coords: any) => (
+  <img src={key} key={key} style={{display: 'block', ...coords}} alt="" />
+);
+
+function useCatState() {
+  const sections = useMemo(() => [cats.length], []);
+  const getItemId = useCallback((section: number, item: number) => {
+    return cats[item].src;
+  }, []);
+  const getItemHeight = useCallback((section: number, item: number, width: number) => {
+    const cat = cats[item];
+    const ratio = cat.height / cat.width;
+    return width * ratio;
+  }, []);
+  return {sections, getItemId, getItemHeight};
+}
 
 function useIsScrolling(): [boolean, () => void] {
   const [, setScrolling] = useState(false);
@@ -140,14 +172,9 @@ export default function App() {
     }
   }, []);
 
-  let Scroller;
-  if (size === ScrollbarSizes.NONE) {
-    Scroller = ScrollerNone;
-  } else if (size === ScrollbarSizes.THIN) {
-    Scroller = ScrollerThin;
-  } else {
-    Scroller = ScrollerAuto;
-  }
+  const Scroller = BasicScrollers[size];
+  const List = ListScrollers[size];
+  const MasonryList = MasonryListScrollers[size];
 
   const [scrolling, handleScroll] = useIsScrolling();
   const classes = [styles.container];
@@ -168,6 +195,8 @@ export default function App() {
   const handleWrapChange = useCallback(({currentTarget}) => {
     setWrapSections(currentTarget.checked);
   }, []);
+
+  const {sections, getItemId, getItemHeight} = useCatState();
 
   return (
     <div dir={dir} className={styles.wrapper}>
@@ -190,7 +219,7 @@ export default function App() {
       <Scroller className={styles.container} dir={dir}>
         {children}
       </Scroller>
-      <ListThin
+      <List
         ref={ref}
         onScroll={handleScroll}
         className={classes.join(' ')}
@@ -202,6 +231,15 @@ export default function App() {
         rowHeight={24}
         paddingBottom={8}
         chunkSize={chunkSize}
+      />
+      <MasonryList
+        className={styles.container}
+        columns={3}
+        gutterSize={8}
+        sections={sections}
+        getItemId={getItemId}
+        getItemHeight={getItemHeight}
+        renderItem={renderItem}
       />
     </div>
   );

@@ -2,10 +2,13 @@ import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} fr
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useAnimatedScroll from './hooks/useAnimatedScroll';
 import useVirtualizedMasonryState, {getSectionIndex} from './hooks/useVirtualizedMasonryState';
+import usePaddingFixes from './hooks/usePaddingFixes';
+import getScrollbarSpecs from './core/getScrollbarSpecs';
 import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from './core/SharedTypes';
 import type {ScrollToProps, ScrollIntoViewProps} from './hooks/useAnimatedScroll';
 import type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, UnitCoords} from './core/MasonryListComputer';
 import useCachedScrollerState from './hooks/useCachedScrollerState';
+import styles from './Scroller.module.css';
 
 export interface MasonryListScrollerRef {
   getScrollerNode: () => HTMLDivElement | null;
@@ -36,10 +39,11 @@ export interface MasonryListScrollerProps extends ScrollerBaseProps {
   renderSection?: RenderSection;
   renderItem: RenderItem;
   renderFooter?: RenderFooter;
-  chunkSize: number;
+  chunkSize?: number;
 }
 
 export default function createMasonryListScroller(scrollbarClassName?: string) {
+  const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, UpdateCallback>();
   const resizeObserver =
     ResizeObserver != null
@@ -53,6 +57,8 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
   return forwardRef<MasonryListScrollerRef, MasonryListScrollerProps>(function MasonryListScroller(
     {
       onScroll,
+      orientation = 'vertical',
+      dir = 'ltr',
       sections,
       columns,
       getItemId,
@@ -63,32 +69,42 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       renderSection,
       renderItem,
       renderFooter,
+      gutterSize,
+      className,
       ...props
     },
     ref
   ) {
     const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
+    usePaddingFixes({scrollerRef, className, specs, orientation, dir});
     // Wrapper around the content of the scroller - used for both resize
     // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);
-    const {forceUpdateOnChunkChange, coordsMap, visibleSections, totalHeight} = useVirtualizedMasonryState({
-      sections,
-      columns,
-      getItemId,
-      getItemHeight,
-      getSectionHeight,
-      getFooterHeight,
-      chunkSize,
-      getScrollerState,
-    });
+    const {forceUpdateOnChunkChange, coordsMap, visibleSections, totalHeight, forceUpdate} = useVirtualizedMasonryState(
+      {
+        sections,
+        columns,
+        getItemId,
+        getItemHeight,
+        getSectionHeight,
+        getFooterHeight,
+        chunkSize,
+        gutterSize,
+        getScrollerState,
+      }
+    );
     const markStateDirty = useCallback(
       (dirtyType: 1 | 2 = 2) => {
         if (dirtyType > scrollerState.current.dirty) {
           scrollerState.current.dirty = dirtyType;
-          forceUpdateOnChunkChange(dirtyType);
+          if (dirtyType === 2) {
+            forceUpdate();
+          } else {
+            forceUpdateOnChunkChange(1);
+          }
         }
       },
-      [forceUpdateOnChunkChange, scrollerState]
+      [forceUpdateOnChunkChange, scrollerState, forceUpdate]
     );
 
     const {scrollTo, scrollIntoView} = useAnimatedScroll(scrollerRef, getScrollerState);
@@ -113,8 +129,13 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       },
       [onScroll, markStateDirty]
     );
+    const classes = [
+      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
+      scrollbarClassName,
+      className,
+    ].filter((str) => str != null);
     return (
-      <div ref={scrollerRef} onScroll={handleScroll} {...props}>
+      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} {...props}>
         {useMemo(() => {
           const footerCoords = coordsMap['__footer__'];
           return (
@@ -122,8 +143,8 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
               {Object.keys(visibleSections).map((sectionId) => {
                 const coords = coordsMap[sectionId];
                 const visibleItems = visibleSections[sectionId];
-                return coords == null || visibleItems == null ? (
-                  <div style={coords}>
+                return coords != null || visibleItems != null ? (
+                  <div style={coords} key={sectionId} data-debug="section">
                     {renderSection != null && renderSection(getSectionIndex(sectionId))}
                     {visibleItems.map((itemId) => {
                       const coords = coordsMap[itemId];
