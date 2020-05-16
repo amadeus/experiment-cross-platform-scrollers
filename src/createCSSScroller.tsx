@@ -23,15 +23,15 @@ export default function createScroller(scrollbarClassName?: string) {
     paddingFix = true,
     ...props
   }: CSSScrollerProps) {
-    const scroller = useRef<HTMLDivElement>(null);
-    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
     const classes = [
       orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
       scrollbarClassName,
       className,
     ].filter((str) => str != null);
     return (
-      <div ref={scroller} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} className={classes.join(' ')} {...props}>
         {children}
         {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>

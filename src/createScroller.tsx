@@ -1,10 +1,11 @@
-import React, {useRef, useImperativeHandle, forwardRef, useCallback} from 'react';
+import React, {useImperativeHandle, forwardRef} from 'react';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import useAnimatedScroll from './hooks/useAnimatedScroll';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {ScrollerBaseProps, ScrollerState} from './core/SharedTypes';
 import type {ScrollIntoViewProps, ScrollToProps} from './hooks/useAnimatedScroll';
+import useUncachedScrollerState from './hooks/useUncachedScrollerState';
 
 // Your basic Scroller component.  It's flexible in that it can have state
 // queried and scroll positions set as needed.  It also includes the basic
@@ -21,52 +22,34 @@ export interface ScrollerProps extends ScrollerBaseProps {
   children: React.ReactNode;
 }
 
-const DEFAULT_STATE: ScrollerState = Object.freeze({
-  scrollTop: 0,
-  scrollLeft: 0,
-  scrollHeight: 0,
-  scrollWidth: 0,
-  offsetHeight: 0,
-  offsetWidth: 0,
-  dirty: 0,
-});
-
 export default function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   return forwardRef(function Scroller(
     {children, className, dir = 'ltr', orientation = 'vertical', paddingFix = true, ...props}: ScrollerProps,
     ref: React.Ref<ScrollerRef>
   ) {
-    const scroller = useRef<HTMLDivElement>(null);
-    const getScrollerState = useCallback((): ScrollerState => {
-      const {current} = scroller;
-      if (current != null) {
-        const {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth} = current;
-        return {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth, dirty: 0};
-      }
-      return DEFAULT_STATE;
-    }, []);
-    const {scrollTo, scrollIntoView} = useAnimatedScroll(scroller, getScrollerState);
+    const {scrollerRef, getScrollerState} = useUncachedScrollerState();
+    const {scrollTo, scrollIntoView} = useAnimatedScroll(scrollerRef, getScrollerState);
     useImperativeHandle<ScrollerRef, ScrollerRef>(
       ref,
       () => ({
         getScrollerNode() {
-          return scroller.current;
+          return scrollerRef.current;
         },
         getScrollerState,
         scrollTo,
         scrollIntoView,
       }),
-      [getScrollerState, scrollTo, scrollIntoView]
+      [scrollerRef, getScrollerState, scrollTo, scrollIntoView]
     );
-    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs});
+    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
     const classes = [
       orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
       scrollbarClassName,
       className,
     ].filter((str) => str != null);
     return (
-      <div ref={scroller} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} className={classes.join(' ')} {...props}>
         {children}
         {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
       </div>

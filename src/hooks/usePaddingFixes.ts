@@ -6,7 +6,7 @@ interface PaddingFixProps {
   orientation: 'vertical' | 'horizontal' | 'auto';
   dir: 'ltr' | 'rtl';
   className: string | null | undefined;
-  scroller: React.RefObject<HTMLDivElement>;
+  scrollerRef: React.RefObject<HTMLDivElement>;
   specs: ScrollerSpecs;
 }
 
@@ -18,10 +18,17 @@ interface PaddingFixProps {
 // you scroll to the end of the scrollable content area and will result in
 // elements feeling like they touch the end of the scroller element.
 
-export default function usePaddingFixes({paddingFix, orientation, dir, className, scroller, specs}: PaddingFixProps) {
+export default function usePaddingFixes({
+  paddingFix,
+  orientation,
+  dir,
+  className,
+  scrollerRef,
+  specs,
+}: PaddingFixProps) {
   const spacingRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    const {current: scrollerNode} = scroller;
+    const {current: scrollerNode} = scrollerRef;
     if (scrollerNode == null || orientation === 'auto' || !paddingFix) {
       return;
     }
@@ -48,6 +55,6 @@ export default function usePaddingFixes({paddingFix, orientation, dir, className
         spacerNode.style.width = computedStyle.getPropertyValue('padding-left');
       }
     }
-  }, [orientation, dir, className, scroller, paddingFix, specs]);
+  }, [orientation, dir, className, scrollerRef, paddingFix, specs]);
   return spacingRef;
 }
