@@ -3,6 +3,8 @@ import useResizeObserverSubscription from './hooks/useResizeObserverSubscription
 import useVirtualizedState from './hooks/useVirtualizedState';
 import useAnimatedListScroll from './hooks/useAnimatedListScroll';
 import useCachedScrollerState from './hooks/useCachedScrollerState';
+import usePaddingFixes from './hooks/usePaddingFixes';
+import getScrollbarSpecs from './core/getScrollbarSpecs';
 import styles from './Scroller.module.css';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
 import type {
@@ -152,6 +154,7 @@ function renderListItems({
 }
 
 export default function createListScroller(scrollbarClassName?: string) {
+  const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, UpdateCallback>();
   const resizeObserver =
     ResizeObserver != null
@@ -185,6 +188,7 @@ export default function createListScroller(scrollbarClassName?: string) {
     ref
   ) {
     const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
+    usePaddingFixes({scrollerRef, className, specs, orientation, dir});
     // Wrapper around the content of the scroller - used for both resize
     // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);

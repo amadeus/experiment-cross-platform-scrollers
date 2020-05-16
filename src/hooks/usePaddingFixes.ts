@@ -2,7 +2,7 @@ import {useRef, useLayoutEffect} from 'react';
 import type {ScrollerSpecs} from '../core/getScrollbarSpecs';
 
 interface PaddingFixProps {
-  paddingFix: boolean;
+  paddingFix?: boolean;
   orientation: 'vertical' | 'horizontal' | 'auto';
   dir: 'ltr' | 'rtl';
   className: string | null | undefined;
@@ -19,7 +19,7 @@ interface PaddingFixProps {
 // elements feeling like they touch the end of the scroller element.
 
 export default function usePaddingFixes({
-  paddingFix,
+  paddingFix = true,
   orientation,
   dir,
   className,
