@@ -2,6 +2,7 @@ import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, us
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useVirtualizedState from './hooks/useVirtualizedState';
 import useAnimatedListScroll from './hooks/useAnimatedListScroll';
+import useCachedScrollerState from './hooks/useCachedScrollerState';
 import styles from './Scroller.module.css';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
 import type {
@@ -79,16 +80,6 @@ export interface ListScrollerRef {
 }
 
 const {ResizeObserver} = window;
-
-const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
-  scrollTop: 0,
-  scrollLeft: 0,
-  scrollHeight: 0,
-  scrollWidth: 0,
-  offsetHeight: 0,
-  offsetWidth: 0,
-  dirty: 2,
-});
 
 // NOTE(amadeus): Can we deprecate this?
 function useGetItems(items: ListItem[]) {
@@ -193,37 +184,10 @@ export default function createListScroller(scrollbarClassName?: string) {
     },
     ref
   ) {
-    // Wrapper container that is the scroller
-    const scroller = useRef<HTMLDivElement>(null);
+    const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
     // Wrapper around the content of the scroller - used for both resize
     // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);
-    const scrollerState = useRef<ScrollerState>(INITIAL_SCROLLER_STATE);
-    // A function to get state data from the Scroller div itself.  Heavily
-    // utilizes caching to prevent unnecessary layouts/reflows when many
-    // different things might request the data.  The reason this API exists is
-    // because virtulization and animated scrolling depend heavily on querying
-    // the state of the scroller and we really only want to ever hit the DOM
-    // node if we know the data has somehow changed and there's a reason to.
-    // We use a property on the state called `dirty` that has 3 possible values
-    // 0 = The state is not dirty, and the cached state can be returned.
-    // 1 = Only the scrollTop value has changed and needs to be queried.
-    // 2 = The entire state needs to be queried
-    const getScrollerState = useCallback(() => {
-      const {current} = scroller;
-      const {dirty} = scrollerState.current;
-      if (current == null || dirty === 0) {
-        return scrollerState.current;
-      }
-      if (dirty === 1) {
-        const {scrollTop, scrollLeft} = current;
-        scrollerState.current = {...scrollerState.current, scrollTop, scrollLeft, dirty: 0};
-      } else {
-        const {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth} = current;
-        scrollerState.current = {scrollTop, scrollLeft, scrollHeight, scrollWidth, offsetHeight, offsetWidth, dirty: 0};
-      }
-      return scrollerState.current;
-    }, []);
     // Using the base scroller data, compute the current list scroller state
     const {spacerTop, totalHeight, items, listComputer, forceUpdateOnChunkChange} = useVirtualizedState({
       sections,
@@ -236,7 +200,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       getScrollerState,
     });
     const {scrollTo, scrollToIndex, scrollIntoView, isItemVisible, getScrollPosition} = useAnimatedListScroll(
-      scroller,
+      scrollerRef,
       getScrollerState,
       listComputer
     );
@@ -247,9 +211,9 @@ export default function createListScroller(scrollbarClassName?: string) {
           forceUpdateOnChunkChange(dirtyType);
         }
       },
-      [forceUpdateOnChunkChange]
+      [forceUpdateOnChunkChange, scrollerState]
     );
-    useResizeObserverSubscription({ref: scroller, onUpdate: markStateDirty, resizeObserver, listenerMap});
+    useResizeObserverSubscription({ref: scrollerRef, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
     const getItems = useGetItems(items);
     const getSectionRowFromIndex = useGetSectionRowFromIndex(sections);
@@ -257,7 +221,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       ref,
       () => ({
         getScrollerNode() {
-          return scroller.current;
+          return scrollerRef.current;
         },
         getScrollerState,
         scrollTo,
@@ -270,6 +234,7 @@ export default function createListScroller(scrollbarClassName?: string) {
         getSectionRowFromIndex,
       }),
       [
+        scrollerRef,
         getScrollerState,
         scrollTo,
         scrollToIndex,
@@ -293,7 +258,7 @@ export default function createListScroller(scrollbarClassName?: string) {
       className,
     ].filter((str) => str != null);
     return (
-      <div ref={scroller} onScroll={handleScroll} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} {...props}>
         {useMemo(
           () => (
             <div ref={content} style={{height: totalHeight}}>
