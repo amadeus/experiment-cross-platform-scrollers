@@ -33,10 +33,10 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   items: [],
 });
 
-type VirtualizedState = {
+interface VirtualizedState extends ListState {
   listComputer: ListComputer;
   forceUpdateOnChunkChange: (fromDirtyType: 1 | 2) => void;
-} & ListState;
+}
 
 // useVirtualizedState takes in a core part of the List props and manages a
 // memoized virtualized state of sections and rows to render based on

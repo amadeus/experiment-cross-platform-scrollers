@@ -11,6 +11,10 @@ export type GridItem = {
   id: string;
 };
 
+export type VisibleSections = {
+  [section: string]: string[];
+};
+
 export type CoordsMap = {[itemId: string]: UnitCoords | undefined};
 export type Grid = GridItem[][];
 export type GetItemId = (section: number, item: number) => string;
@@ -20,7 +24,7 @@ export type GetFooterHeight = (columns: number, columnWidth: number, gutterSize:
 
 export interface MasonryComputerState {
   coordsMap: CoordsMap;
-  visibleItems: VisibleItems;
+  visibleSections: VisibleSections;
   totalHeight: number;
 }
 
@@ -37,6 +41,7 @@ export type ListComputerProps = Partial<{
 
 const FOOTER_ID = '__footer__';
 const getSectionId = (section: number) => `__section__${section}`;
+export const getSectionIndex = (sectionId: string) => parseInt(sectionId.replace(/^__section__/, ''), 10);
 
 function getMinColumn(columns: number[]): [number, number] {
   return columns.reduce(
@@ -52,12 +57,8 @@ function getMinColumn(columns: number[]): [number, number] {
 
 const DEFAULT_HEIGHT = () => 0;
 
-export type VisibleItems = {
-  [section: string]: string[];
-};
-
 export default class MasonryListComputer {
-  visibleItems: VisibleItems = {};
+  visibleSections: VisibleSections = {};
   coordsMap: CoordsMap = {};
   columnHeights: number[] = [];
   columnWidth: number = 0;
@@ -180,15 +181,15 @@ export default class MasonryListComputer {
     }
     this.totalHeight = totalHeight;
     // Always reset visible items on a full compute
-    this.visibleItems = {};
+    this.visibleSections = {};
     this.needsFullCompute = false;
   }
 
-  computeVisibleItems(bufferTop: number, bufferBottom: number) {
+  computeVisibleSections(bufferTop: number, bufferBottom: number) {
     // This will return early if the compute is not needed
     this.computeFullCoords();
     const {getItemId, coordsMap} = this;
-    this.visibleItems = {};
+    this.visibleSections = {};
     let section = 0;
     while (section < this.sections.length) {
       const items = this.sections[section];
@@ -232,8 +233,8 @@ export default class MasonryListComputer {
         }
         const {top, height} = coords;
         if (top + sectionTop > bufferTop - height && top + sectionTop < bufferBottom) {
-          this.visibleItems[sectionId] = this.visibleItems[sectionId] || [];
-          this.visibleItems[sectionId].push(id);
+          this.visibleSections[sectionId] = this.visibleSections[sectionId] || [];
+          this.visibleSections[sectionId].push(id);
         }
         item += increment;
       }
@@ -253,7 +254,7 @@ export default class MasonryListComputer {
   getState(): MasonryComputerState {
     return {
       coordsMap: this.coordsMap,
-      visibleItems: this.visibleItems,
+      visibleSections: this.visibleSections,
       totalHeight: this.totalHeight,
       // Some ish to figure out with dat footer?
     };
