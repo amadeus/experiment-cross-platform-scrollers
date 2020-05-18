@@ -82,7 +82,7 @@ const wrapSection: RenderWrapperFunction = (section, children) => {
   );
 };
 
-const renderItem = (key: string, coords: React.CSSProperties) => (
+const renderItem = (key: string, coords: any) => (
   <img src={key} key={key} style={{display: 'block', ...coords}} alt="" />
 );
 
