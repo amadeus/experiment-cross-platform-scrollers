@@ -29,6 +29,25 @@
   margin: 1px 0 1px;
 }
 
+.masonrySection {
+  background-color: rgba(204, 204, 204, 0.9);
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 10px;
+  z-index: 1;
+}
+
+.masonryFooter {
+  display: flex;
+  font-weight: bold;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
 .input {
   width: 75px;
 }

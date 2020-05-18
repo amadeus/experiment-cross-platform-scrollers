@@ -1,14 +1,16 @@
 import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} from 'react';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useAnimatedScroll from './hooks/useAnimatedScroll';
-import useVirtualizedMasonryState, {getSectionIndex} from './hooks/useVirtualizedMasonryState';
+import useVirtualizedMasonryState, {getSectionIndex, getSectionHeaderId} from './hooks/useVirtualizedMasonryState';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from './core/SharedTypes';
 import type {ScrollToProps, ScrollIntoViewProps} from './hooks/useAnimatedScroll';
-import type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, UnitCoords} from './core/MasonryListComputer';
+import type {GetItemId, GetSectionHeight, GetItemHeight, UnitCoords} from './core/MasonryListComputer';
 import useCachedScrollerState from './hooks/useCachedScrollerState';
 import styles from './Scroller.module.css';
+
+export type {UnitCoords};
 
 export interface MasonryListScrollerRef {
   getScrollerNode: () => HTMLDivElement | null;
@@ -24,9 +26,8 @@ export interface MasonryListScrollerRef {
   // getSectionRowFromIndex: (index: number) => [number, number];
 }
 
-export type RenderSection = (section: number) => React.ReactNode;
-export type RenderItem = (id: string, coords: UnitCoords) => React.ReactNode;
-export type RenderFooter = (coords: UnitCoords) => React.ReactNode;
+export type RenderSection = (section: number, coords: UnitCoords, sectionId: string) => React.ReactNode;
+export type RenderItem = (section: number, item: number, coords: UnitCoords, itemId: string) => React.ReactNode;
 
 export interface MasonryListScrollerProps extends ScrollerBaseProps {
   columns: number;
@@ -35,10 +36,8 @@ export interface MasonryListScrollerProps extends ScrollerBaseProps {
   getItemId: GetItemId;
   getSectionHeight?: GetSectionHeight;
   getItemHeight: GetItemHeight;
-  getFooterHeight?: GetFooterHeight;
   renderSection?: RenderSection;
   renderItem: RenderItem;
-  renderFooter?: RenderFooter;
   chunkSize?: number;
 }
 
@@ -64,11 +63,9 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       getItemId,
       getItemHeight,
       getSectionHeight,
-      getFooterHeight,
       chunkSize,
       renderSection,
       renderItem,
-      renderFooter,
       gutterSize,
       className,
       ...props
@@ -87,7 +84,6 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
         getItemId,
         getItemHeight,
         getSectionHeight,
-        getFooterHeight,
         chunkSize,
         gutterSize,
         getScrollerState,
@@ -136,27 +132,30 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
     ].filter((str) => str != null);
     return (
       <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} {...props}>
-        {useMemo(() => {
-          const footerCoords = coordsMap['__footer__'];
-          return (
+        {useMemo(
+          () => (
             <div ref={content} style={{height: totalHeight}}>
               {Object.keys(visibleSections).map((sectionId) => {
-                const coords = coordsMap[sectionId];
+                const section = getSectionIndex(sectionId);
+                const sectionCoords = coordsMap[sectionId];
                 const visibleItems = visibleSections[sectionId];
-                return coords != null || visibleItems != null ? (
-                  <div style={coords} key={sectionId} data-debug="section">
-                    {renderSection != null && renderSection(getSectionIndex(sectionId))}
-                    {visibleItems.map((itemId) => {
+                const sectionHeaderCoords = coordsMap[getSectionHeaderId(section)];
+                return sectionCoords != null && visibleItems != null ? (
+                  <div style={sectionCoords} key={sectionId}>
+                    {renderSection != null &&
+                      sectionHeaderCoords != null &&
+                      renderSection(section, sectionHeaderCoords, sectionId)}
+                    {visibleItems.map(([itemId, section, item]) => {
                       const coords = coordsMap[itemId];
-                      return coords != null ? renderItem(itemId, coords) : null;
+                      return coords != null ? renderItem(section, item, coords, itemId) : null;
                     })}
                   </div>
                 ) : null;
               })}
-              {renderFooter != null && footerCoords != null && renderFooter(footerCoords)}
             </div>
-          );
-        }, [visibleSections, renderItem, renderSection, renderFooter, coordsMap, totalHeight])}
+          ),
+          [visibleSections, renderItem, renderSection, coordsMap, totalHeight]
+        )}
       </div>
     );
   });

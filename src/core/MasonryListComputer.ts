@@ -1,5 +1,5 @@
 export interface UnitCoords {
-  position: 'absolute';
+  position: 'absolute' | 'sticky';
   top: number;
   left: number;
   width: number;
@@ -12,7 +12,7 @@ export type GridItem = {
 };
 
 export type VisibleSections = {
-  [section: string]: string[];
+  [section: string]: [string, number, number][];
 };
 
 export type CoordsMap = {[itemId: string]: UnitCoords | undefined};
@@ -20,7 +20,6 @@ export type Grid = string[][];
 export type GetItemId = (section: number, item: number) => string;
 export type GetSectionHeight = (section: number) => number;
 export type GetItemHeight = (section: number, item: number, columnWidth: number) => number;
-export type GetFooterHeight = (columns: number, columnWidth: number, gutterSize: number) => number;
 
 export interface MasonryComputerState {
   coordsMap: CoordsMap;
@@ -35,12 +34,11 @@ export type ListComputerProps = Partial<{
   getSectionHeight: GetSectionHeight;
   getItemId: GetItemId;
   getItemHeight: GetItemHeight;
-  getFooterHeight: GetFooterHeight;
   bufferWidth: number;
 }>;
 
-const FOOTER_ID = '__footer__';
-const getSectionId = (section: number) => `__section__${section}`;
+export const getSectionId = (section: number) => `__section__${section}`;
+export const getSectionHeaderId = (section: number) => `__section_header__${section}`;
 export const getSectionIndex = (sectionId: string) => parseInt(sectionId.replace(/^__section__/, ''), 10);
 
 function getMinColumn(columns: number[]): [number, number] {
@@ -76,7 +74,6 @@ export default class MasonryListComputer {
     throw new Error('MasonryListComputer: getItemHeight has not been implemented');
   };
   private getSectionHeight: GetSectionHeight = DEFAULT_HEIGHT;
-  private getFooterHeight: GetFooterHeight = DEFAULT_HEIGHT;
 
   mergeProps({
     sections = this.sections,
@@ -85,7 +82,6 @@ export default class MasonryListComputer {
     getItemId = this.getItemId,
     getItemHeight = this.getItemHeight,
     getSectionHeight = this.getSectionHeight,
-    getFooterHeight = this.getFooterHeight,
     bufferWidth = this.bufferWidth,
   }: ListComputerProps) {
     if (
@@ -95,7 +91,6 @@ export default class MasonryListComputer {
       this.getItemId === getItemId &&
       this.getSectionHeight === getSectionHeight &&
       this.getItemHeight === getItemHeight &&
-      this.getFooterHeight === getFooterHeight &&
       this.bufferWidth === bufferWidth
     ) {
       return;
@@ -107,7 +102,6 @@ export default class MasonryListComputer {
     this.getItemId = getItemId;
     this.getSectionHeight = getSectionHeight;
     this.getItemHeight = getItemHeight;
-    this.getFooterHeight = getFooterHeight;
     this.bufferWidth = bufferWidth;
   }
 
@@ -115,7 +109,7 @@ export default class MasonryListComputer {
     if (!this.needsFullCompute) {
       return;
     }
-    const {columns, getItemId, getItemHeight, gutterSize, getFooterHeight, getSectionHeight, bufferWidth} = this;
+    const {columns, getItemId, getItemHeight, gutterSize, getSectionHeight, bufferWidth} = this;
     this.coordsMap = {};
     this.columnHeights = new Array(columns).fill(0);
     this.columnWidth = (bufferWidth - gutterSize * (columns + 1)) / columns;
@@ -127,8 +121,8 @@ export default class MasonryListComputer {
       // Sections are full width - regardless of number of columns, so we need
       // to figure out the tallest column height, and use that as a basis going
       // forward
-      const sectionTop = this.getMaxColumnHeight(this.columnHeights);
       const sectionHeight = getSectionHeight(section);
+      const sectionTop = this.getMaxColumnHeight(this.columnHeights) + (sectionHeight > 0 ? gutterSize : 0);
       for (let i = 0; i < this.columnHeights.length; i++) {
         this.columnHeights[i] = sectionTop + sectionHeight;
       }
@@ -155,6 +149,15 @@ export default class MasonryListComputer {
         this.itemGrid[columnIndex].push(id);
         item++;
       }
+      if (sectionHeight > 0) {
+        this.coordsMap[getSectionHeaderId(section)] = {
+          position: 'sticky',
+          left: gutterSize,
+          width: this.columnWidth * columns + gutterSize * columns,
+          top: 0,
+          height: sectionHeight,
+        };
+      }
       this.coordsMap[getSectionId(section)] = {
         position: 'absolute',
         left: gutterSize,
@@ -166,19 +169,7 @@ export default class MasonryListComputer {
     }
 
     this.columnHeights = this.columnHeights.map((height) => height + gutterSize);
-    const footerHeight = getFooterHeight(columns, this.columnWidth, gutterSize);
-    let totalHeight = this.getMaxColumnHeight();
-    if (footerHeight > 0) {
-      this.coordsMap[FOOTER_ID] = {
-        position: 'absolute',
-        left: gutterSize,
-        width: bufferWidth - gutterSize * 2,
-        top: totalHeight,
-        height: footerHeight,
-      };
-      totalHeight += footerHeight + gutterSize;
-    }
-    this.totalHeight = totalHeight;
+    this.totalHeight = this.getMaxColumnHeight();
     // Always reset visible items on a full compute
     this.visibleSections = {};
     this.needsFullCompute = false;
@@ -222,6 +213,7 @@ export default class MasonryListComputer {
         increment = -1;
       }
 
+      this.visibleSections[sectionId] = [];
       while (item >= 0 && item < items) {
         const id = getItemId(section, item);
         const coords = coordsMap[id];
@@ -232,8 +224,7 @@ export default class MasonryListComputer {
         }
         const {top, height} = coords;
         if (top + sectionTop > bufferTop - height && top + sectionTop < bufferBottom) {
-          this.visibleSections[sectionId] = this.visibleSections[sectionId] || [];
-          this.visibleSections[sectionId].push(id);
+          this.visibleSections[sectionId].push([id, section, item]);
         }
         item += increment;
       }
@@ -255,7 +246,6 @@ export default class MasonryListComputer {
       coordsMap: this.coordsMap,
       visibleSections: this.visibleSections,
       totalHeight: this.totalHeight,
-      // Some ish to figure out with dat footer?
     };
   }
 }

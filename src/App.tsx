@@ -11,6 +11,7 @@ import type {
   RenderRowFunction,
   RenderWrapperFunction,
 } from './createListScroller';
+import type {UnitCoords, RenderSection as RenderMasonrySection} from './createMasonryListScroller';
 
 enum ScrollbarSizes {
   NONE = 'NONE',
@@ -49,7 +50,7 @@ const MasonryListScrollers = Object.freeze({
 
 const LIST_SECTIONS = [10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92];
 
-const renderSection: RenderSectionFunction = ({section}) => {
+const renderListSection: RenderSectionFunction = ({section}) => {
   return (
     <div key={`section-${section}`} className={styles.section}>
       Section {section}
@@ -82,21 +83,59 @@ const wrapSection: RenderWrapperFunction = (section, children) => {
   );
 };
 
-const renderItem = (key: string, coords: any) => (
-  <img src={key} key={key} style={{display: 'block', ...coords}} alt="" />
-);
+type Cat = {
+  src: string;
+  width: number;
+  height: number;
+};
+
+const CAT_SECTIONS: Cat[][] = [
+  cats.slice(0, 50),
+  cats.slice(50, 180),
+  cats.slice(180, 402),
+  cats.slice(402, 468),
+  cats.slice(468),
+];
+
+const renderMasonrySection: RenderMasonrySection = (section: number, coords: UnitCoords, sectionId: string) => {
+  return section === CAT_SECTIONS.length ? (
+    <div style={coords} key={sectionId} className={styles.masonryFooter}>
+      <strong>THIS IS AN EXAMPLE FOOTER</strong>
+      <span>It uses a section with no items</span>
+    </div>
+  ) : (
+    <div style={coords} key={sectionId} className={styles.masonrySection}>
+      Section {section + 1}
+    </div>
+  );
+};
+
+const renderMasonryItem = (section: number, item: number, coords: UnitCoords, itemId: string) => {
+  return <img src={itemId} key={itemId} style={{display: 'block', ...coords}} alt="" />;
+};
 
 function useCatState() {
-  const sections = useMemo(() => [cats.length], []);
+  const sections = useMemo(() => {
+    const sections = [];
+    for (const items of CAT_SECTIONS) {
+      sections.push(items.length);
+    }
+    // Add an example `footer` - using using sections with no items
+    sections.push(0);
+    return sections;
+  }, []);
   const getItemId = useCallback((section: number, item: number) => {
-    return cats[item].src;
+    return CAT_SECTIONS[section][item].src;
   }, []);
   const getItemHeight = useCallback((section: number, item: number, width: number) => {
-    const cat = cats[item];
+    const cat = CAT_SECTIONS[section][item];
     const ratio = cat.height / cat.width;
     return width * ratio;
   }, []);
-  return {sections, getItemId, getItemHeight};
+  const getSectionHeight = useCallback((section: number) => {
+    return section === CAT_SECTIONS.length ? 200 : 40;
+  }, []);
+  return {sections, getItemId, getItemHeight, getSectionHeight};
 }
 
 function useIsScrolling(): [boolean, () => void] {
@@ -196,7 +235,7 @@ export default function App() {
     setWrapSections(currentTarget.checked);
   }, []);
 
-  const {sections, getItemId, getItemHeight} = useCatState();
+  const {sections, getItemId, getItemHeight, getSectionHeight} = useCatState();
 
   return (
     <div dir={dir} className={styles.wrapper}>
@@ -224,7 +263,7 @@ export default function App() {
         onScroll={handleScroll}
         className={classes.join(' ')}
         sections={LIST_SECTIONS}
-        renderSection={renderSection}
+        renderSection={renderListSection}
         renderRow={renderRow}
         wrapSection={wrapSectionsBool ? wrapSection : undefined}
         sectionHeight={48}
@@ -239,7 +278,9 @@ export default function App() {
         sections={sections}
         getItemId={getItemId}
         getItemHeight={getItemHeight}
-        renderItem={renderItem}
+        getSectionHeight={getSectionHeight}
+        renderItem={renderMasonryItem}
+        renderSection={renderMasonrySection}
       />
     </div>
   );

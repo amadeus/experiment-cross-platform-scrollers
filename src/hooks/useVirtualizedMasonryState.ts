@@ -1,18 +1,12 @@
 import {useRef, useState, useMemo} from 'react';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import MasonryListComputer, {getSectionIndex} from '../core/MasonryListComputer';
+import MasonryListComputer, {getSectionIndex, getSectionHeaderId, getSectionId} from '../core/MasonryListComputer';
 import type {ScrollerState} from '../core/SharedTypes';
-import type {
-  GetItemId,
-  GetSectionHeight,
-  GetItemHeight,
-  GetFooterHeight,
-  MasonryComputerState,
-} from '../core/MasonryListComputer';
+import type {GetItemId, GetSectionHeight, GetItemHeight, MasonryComputerState} from '../core/MasonryListComputer';
 
-export type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, MasonryComputerState};
-export {getSectionIndex};
+export type {GetItemId, GetSectionHeight, GetItemHeight, MasonryComputerState};
+export {getSectionIndex, getSectionId, getSectionHeaderId};
 
 const DEFAULT_ITEM_STATE: MasonryComputerState = Object.freeze({
   coordsMap: {},
@@ -26,7 +20,6 @@ interface VirtualizedMasonryProps {
   getItemId: GetItemId;
   getItemHeight: GetItemHeight;
   getSectionHeight?: GetSectionHeight | undefined;
-  getFooterHeight?: GetFooterHeight | undefined;
   chunkSize: number | undefined;
   getScrollerState: () => ScrollerState;
   gutterSize: number;
@@ -44,7 +37,6 @@ export default function useVirtualizedMasonryState({
   getItemId,
   getItemHeight,
   getSectionHeight,
-  getFooterHeight,
   chunkSize = 250,
   getScrollerState,
   gutterSize,
@@ -70,7 +62,6 @@ export default function useVirtualizedMasonryState({
       getItemId,
       getItemHeight,
       getSectionHeight,
-      getFooterHeight,
       bufferWidth,
       gutterSize,
     });
@@ -84,7 +75,6 @@ export default function useVirtualizedMasonryState({
     getItemId,
     getItemHeight,
     getSectionHeight,
-    getFooterHeight,
     chunkStart,
     chunkEnd,
     chunkSize,
