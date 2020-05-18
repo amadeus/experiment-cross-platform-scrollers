@@ -1,10 +1,7 @@
-export interface UnitCoords {
-  position: 'absolute';
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-}
+// Unit coords is a simplified string structure to cut down on memory usage.
+// It's a `;` separated string with values for the following props in order:
+// `top;left;width;height`
+export type UnitCoords = string;
 
 export type GridItem = {
   coords: UnitCoords;
@@ -42,6 +39,26 @@ export type ListComputerProps = Partial<{
 const FOOTER_ID = '__footer__';
 const getSectionId = (section: number) => `__section__${section}`;
 export const getSectionIndex = (sectionId: string) => parseInt(sectionId.replace(/^__section__/, ''), 10);
+
+export function getCoordsString(top: number, left: number, width: number, height: number): string {
+  return `${top};${left};${width};${height}`;
+}
+
+export function parseCoordsValues(coords: UnitCoords): [number, number, number, number] {
+  const [top, left, width, height] = coords.split(';');
+  return [parseInt(top, 10), parseInt(left, 10), parseInt(width, 10), parseInt(height, 10)];
+}
+
+export function parseCoordsStyle(coords: UnitCoords): React.CSSProperties {
+  const [top, left, width, height] = coords.split(';');
+  return {
+    position: 'absolute',
+    top: parseInt(top, 10),
+    left: parseInt(left, 10),
+    width: parseInt(width, 10),
+    height: parseInt(height, 10),
+  };
+}
 
 function getMinColumn(columns: number[]): [number, number] {
   return columns.reduce(
@@ -141,14 +158,10 @@ export default class MasonryListComputer {
         }
         const [columnHeight, columnIndex] = getMinColumn(this.columnHeights);
         const height = getItemHeight(section, item, this.columnWidth);
-        const top = columnHeight + gutterSize;
-        const coords: UnitCoords = {
-          position: 'absolute',
-          left: this.columnWidth * columnIndex + gutterSize * (columnIndex + 1) - gutterSize,
-          width: this.columnWidth,
-          top: top - sectionTop,
-          height,
-        };
+        const top = columnHeight + gutterSize - sectionTop;
+        const left = this.columnWidth * columnIndex + gutterSize * (columnIndex + 1) - gutterSize;
+        const width = this.columnWidth;
+        const coords = getCoordsString(top, left, width, height);
         this.coordsMap[id] = coords;
         this.columnHeights[columnIndex] = top + height;
         if (this.itemGrid[columnIndex] == null) {
@@ -157,13 +170,12 @@ export default class MasonryListComputer {
         this.itemGrid[columnIndex].push({coords, id});
         item++;
       }
-      this.coordsMap[getSectionId(section)] = {
-        position: 'absolute',
-        left: gutterSize,
-        width: this.columnWidth * columns + gutterSize * columns,
-        top: sectionTop,
-        height: this.getMaxColumnHeight(this.columnHeights) - sectionTop,
-      };
+      this.coordsMap[getSectionId(section)] = getCoordsString(
+        sectionTop,
+        gutterSize,
+        this.columnWidth * columns + gutterSize * columns,
+        this.getMaxColumnHeight(this.columnHeights) - sectionTop
+      );
       section++;
     }
 
@@ -171,13 +183,7 @@ export default class MasonryListComputer {
     const footerHeight = getFooterHeight(columns, this.columnWidth, gutterSize);
     let totalHeight = this.getMaxColumnHeight();
     if (footerHeight > 0) {
-      this.coordsMap[FOOTER_ID] = {
-        position: 'absolute',
-        left: gutterSize,
-        width: bufferWidth - gutterSize * 2,
-        top: totalHeight,
-        height: footerHeight,
-      };
+      this.coordsMap[FOOTER_ID] = getCoordsString(totalHeight, gutterSize, bufferWidth - gutterSize * 2, footerHeight);
       totalHeight += footerHeight + gutterSize;
     }
     this.totalHeight = totalHeight;
@@ -201,8 +207,8 @@ export default class MasonryListComputer {
         section++;
         continue;
       }
-      const {top: sectionTop} = sectionCoords;
-      const sectionBottom = sectionTop + sectionCoords.height;
+      const [sectionTop, , , height] = parseCoordsValues(sectionCoords);
+      const sectionBottom = sectionTop + height;
       // If top is below bufferBottom then we know it's not in view and we can
       // stop iterating because we always iterate on sections from top down
       if (sectionTop > bufferBottom) {
@@ -232,7 +238,7 @@ export default class MasonryListComputer {
           item += increment;
           continue;
         }
-        const {top, height} = coords;
+        const [top, , , height] = parseCoordsValues(coords);
         if (top + sectionTop > bufferTop - height && top + sectionTop < bufferBottom) {
           this.visibleSections[sectionId] = this.visibleSections[sectionId] || [];
           this.visibleSections[sectionId].push(id);

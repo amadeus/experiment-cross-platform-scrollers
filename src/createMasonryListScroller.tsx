@@ -1,14 +1,22 @@
 import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} from 'react';
 import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
 import useAnimatedScroll from './hooks/useAnimatedScroll';
-import useVirtualizedMasonryState, {getSectionIndex} from './hooks/useVirtualizedMasonryState';
+import useVirtualizedMasonryState, {getSectionIndex, parseCoordsStyle} from './hooks/useVirtualizedMasonryState';
 import usePaddingFixes from './hooks/usePaddingFixes';
 import getScrollbarSpecs from './core/getScrollbarSpecs';
 import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from './core/SharedTypes';
 import type {ScrollToProps, ScrollIntoViewProps} from './hooks/useAnimatedScroll';
-import type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, UnitCoords} from './core/MasonryListComputer';
+import type {
+  GetItemId,
+  GetSectionHeight,
+  GetItemHeight,
+  GetFooterHeight,
+  UnitCoords,
+} from './hooks/useVirtualizedMasonryState';
 import useCachedScrollerState from './hooks/useCachedScrollerState';
 import styles from './Scroller.module.css';
+
+export type {UnitCoords};
 
 export interface MasonryListScrollerRef {
   getScrollerNode: () => HTMLDivElement | null;
@@ -25,8 +33,8 @@ export interface MasonryListScrollerRef {
 }
 
 export type RenderSection = (section: number) => React.ReactNode;
-export type RenderItem = (id: string, coords: UnitCoords) => React.ReactNode;
-export type RenderFooter = (coords: UnitCoords) => React.ReactNode;
+export type RenderItem = (id: string, coords: React.CSSProperties) => React.ReactNode;
+export type RenderFooter = (coords: React.CSSProperties) => React.ReactNode;
 
 export interface MasonryListScrollerProps extends ScrollerBaseProps {
   columns: number;
@@ -143,17 +151,17 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
               {Object.keys(visibleSections).map((sectionId) => {
                 const coords = coordsMap[sectionId];
                 const visibleItems = visibleSections[sectionId];
-                return coords != null || visibleItems != null ? (
-                  <div style={coords} key={sectionId} data-debug="section">
+                return coords != null && visibleItems != null ? (
+                  <div style={parseCoordsStyle(coords)} key={sectionId} data-debug="section">
                     {renderSection != null && renderSection(getSectionIndex(sectionId))}
                     {visibleItems.map((itemId) => {
                       const coords = coordsMap[itemId];
-                      return coords != null ? renderItem(itemId, coords) : null;
+                      return coords != null ? renderItem(itemId, parseCoordsStyle(coords)) : null;
                     })}
                   </div>
                 ) : null;
               })}
-              {renderFooter != null && footerCoords != null && renderFooter(footerCoords)}
+              {renderFooter != null && footerCoords != null && renderFooter(parseCoordsStyle(footerCoords))}
             </div>
           );
         }, [visibleSections, renderItem, renderSection, renderFooter, coordsMap, totalHeight])}

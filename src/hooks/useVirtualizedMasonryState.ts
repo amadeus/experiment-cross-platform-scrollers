@@ -1,7 +1,12 @@
 import {useRef, useState, useMemo} from 'react';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import MasonryListComputer, {getSectionIndex} from '../core/MasonryListComputer';
+import MasonryListComputer, {
+  getSectionIndex,
+  getCoordsString,
+  parseCoordsValues,
+  parseCoordsStyle,
+} from '../core/MasonryListComputer';
 import type {ScrollerState} from '../core/SharedTypes';
 import type {
   GetItemId,
@@ -9,10 +14,11 @@ import type {
   GetItemHeight,
   GetFooterHeight,
   MasonryComputerState,
+  UnitCoords,
 } from '../core/MasonryListComputer';
 
-export type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, MasonryComputerState};
-export {getSectionIndex};
+export type {GetItemId, GetSectionHeight, GetItemHeight, GetFooterHeight, MasonryComputerState, UnitCoords};
+export {getSectionIndex, getCoordsString, parseCoordsValues, parseCoordsStyle};
 
 const DEFAULT_ITEM_STATE: MasonryComputerState = Object.freeze({
   coordsMap: {},
