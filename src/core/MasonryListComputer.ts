@@ -16,7 +16,7 @@ export type VisibleSections = {
 };
 
 export type CoordsMap = {[itemId: string]: UnitCoords | undefined};
-export type Grid = GridItem[][];
+export type Grid = string[][];
 export type GetItemId = (section: number, item: number) => string;
 export type GetSectionHeight = (section: number) => number;
 export type GetItemHeight = (section: number, item: number, columnWidth: number) => number;
@@ -151,10 +151,8 @@ export default class MasonryListComputer {
         };
         this.coordsMap[id] = coords;
         this.columnHeights[columnIndex] = top + height;
-        if (this.itemGrid[columnIndex] == null) {
-          this.itemGrid[columnIndex] = [];
-        }
-        this.itemGrid[columnIndex].push({coords, id});
+        this.itemGrid[columnIndex] = this.itemGrid[columnIndex] || [];
+        this.itemGrid[columnIndex].push(id);
         item++;
       }
       this.coordsMap[getSectionId(section)] = {
