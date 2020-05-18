@@ -31,7 +31,9 @@ export type RenderItem = (section: number, item: number, coords: UnitCoords, ite
 
 export interface MasonryListScrollerProps extends ScrollerBaseProps {
   columns: number;
-  gutterSize: number;
+  itemGutter: number;
+  sectionGutter?: number;
+  padding?: number;
   sections: number[];
   getItemId: GetItemId;
   getSectionHeight?: GetSectionHeight;
@@ -66,7 +68,9 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       chunkSize,
       renderSection,
       renderItem,
-      gutterSize,
+      itemGutter,
+      sectionGutter,
+      padding,
       className,
       ...props
     },
@@ -85,7 +89,9 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
         getItemHeight,
         getSectionHeight,
         chunkSize,
-        gutterSize,
+        itemGutter,
+        sectionGutter,
+        padding,
         getScrollerState,
       }
     );

@@ -35,17 +35,22 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 10px;
+  padding-left: 8px;
   z-index: 1;
+  box-sizing: border-box;
 }
 
 .masonryFooter {
   display: flex;
-  font-weight: bold;
   align-items: center;
+  flex-direction: column;
   justify-content: center;
   color: #fff;
   background-color: rgba(0, 0, 0, 0.3);
+}
+
+.masonryImage {
+  display: block;
 }
 
 .input {

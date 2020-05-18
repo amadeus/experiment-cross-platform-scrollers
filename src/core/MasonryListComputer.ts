@@ -30,7 +30,9 @@ export interface MasonryComputerState {
 export type ListComputerProps = Partial<{
   sections: number[];
   columns: number;
-  gutterSize: number;
+  itemGutter: number;
+  sectionGutter: number | null;
+  padding: number | null;
   getSectionHeight: GetSectionHeight;
   getItemId: GetItemId;
   getItemHeight: GetItemHeight;
@@ -66,7 +68,9 @@ export default class MasonryListComputer {
   private bufferWidth = 0;
   private sections: number[] = [];
   private columns: number = 0;
-  private gutterSize: number = 0;
+  private itemGutter: number = 0;
+  private sectionGutter: number | null = null;
+  private padding: number | null = null;
   private getItemId: GetItemId = () => {
     throw new Error('MasonryListComputer: getItemId has not been implemented');
   };
@@ -75,56 +79,71 @@ export default class MasonryListComputer {
   };
   private getSectionHeight: GetSectionHeight = DEFAULT_HEIGHT;
 
+  private getPadding() {
+    return this.padding != null ? this.padding : this.itemGutter;
+  }
+
+  private getSectionGutter() {
+    return this.sectionGutter != null ? this.sectionGutter : this.itemGutter;
+  }
+
   mergeProps({
     sections = this.sections,
     columns = this.columns,
-    gutterSize = this.gutterSize,
+    itemGutter = this.itemGutter,
     getItemId = this.getItemId,
     getItemHeight = this.getItemHeight,
     getSectionHeight = this.getSectionHeight,
     bufferWidth = this.bufferWidth,
+    padding = this.padding,
+    sectionGutter = this.sectionGutter,
   }: ListComputerProps) {
     if (
       this.sections === sections &&
       this.columns === columns &&
-      this.gutterSize === gutterSize &&
+      this.itemGutter === itemGutter &&
       this.getItemId === getItemId &&
       this.getSectionHeight === getSectionHeight &&
       this.getItemHeight === getItemHeight &&
-      this.bufferWidth === bufferWidth
+      this.bufferWidth === bufferWidth &&
+      this.padding === padding &&
+      this.sectionGutter === sectionGutter
     ) {
       return;
     }
     this.needsFullCompute = true;
     this.sections = sections;
     this.columns = columns;
-    this.gutterSize = gutterSize;
+    this.itemGutter = itemGutter;
     this.getItemId = getItemId;
     this.getSectionHeight = getSectionHeight;
     this.getItemHeight = getItemHeight;
     this.bufferWidth = bufferWidth;
+    this.padding = padding;
+    this.sectionGutter = sectionGutter;
   }
 
   computeFullCoords() {
     if (!this.needsFullCompute) {
       return;
     }
-    const {columns, getItemId, getItemHeight, gutterSize, getSectionHeight, bufferWidth} = this;
+    const {columns, getItemId, getItemHeight, itemGutter, getSectionHeight, bufferWidth} = this;
     this.coordsMap = {};
-    this.columnHeights = new Array(columns).fill(0);
-    this.columnWidth = (bufferWidth - gutterSize * (columns + 1)) / columns;
+    this.columnHeights = new Array(columns).fill(this.getPadding());
+    this.columnWidth = (bufferWidth - this.getPadding() * 2 - itemGutter * (columns - 1)) / columns;
     this.itemGrid = [];
     let section = 0;
     while (section < this.sections.length) {
       const items = this.sections[section];
       let item = 0;
-      // Sections are full width - regardless of number of columns, so we need
-      // to figure out the tallest column height, and use that as a basis going
-      // forward
-      const sectionHeight = getSectionHeight(section);
-      const sectionTop = this.getMaxColumnHeight(this.columnHeights) + (sectionHeight > 0 ? gutterSize : 0);
+      let sectionHeight = getSectionHeight(section);
+      let sectionTop = this.getMaxColumnHeight(this.columnHeights);
+      if (section > 0) {
+        sectionTop = sectionTop - itemGutter + this.getSectionGutter();
+      }
+      const sectionOffset = sectionHeight > 0 ? sectionHeight + itemGutter : 0;
       for (let i = 0; i < this.columnHeights.length; i++) {
-        this.columnHeights[i] = sectionTop + sectionHeight;
+        this.columnHeights[i] = sectionTop + sectionOffset;
       }
       while (item < items) {
         const id = getItemId(section, item);
@@ -133,18 +152,17 @@ export default class MasonryListComputer {
           item++;
           continue;
         }
-        const [columnHeight, columnIndex] = getMinColumn(this.columnHeights);
+        const [top, columnIndex] = getMinColumn(this.columnHeights);
         const height = getItemHeight(section, item, this.columnWidth);
-        const top = columnHeight + gutterSize;
         const coords: UnitCoords = {
           position: 'absolute',
-          left: this.columnWidth * columnIndex + gutterSize * (columnIndex + 1) - gutterSize,
+          left: this.columnWidth * columnIndex + itemGutter * (columnIndex + 1) - itemGutter,
           width: this.columnWidth,
           top: top - sectionTop,
           height,
         };
         this.coordsMap[id] = coords;
-        this.columnHeights[columnIndex] = top + height;
+        this.columnHeights[columnIndex] = top + height + itemGutter;
         this.itemGrid[columnIndex] = this.itemGrid[columnIndex] || [];
         this.itemGrid[columnIndex].push(id);
         item++;
@@ -152,23 +170,23 @@ export default class MasonryListComputer {
       if (sectionHeight > 0) {
         this.coordsMap[getSectionHeaderId(section)] = {
           position: 'sticky',
-          left: gutterSize,
-          width: this.columnWidth * columns + gutterSize * columns,
+          left: 0,
+          width: this.columnWidth * columns + itemGutter * columns,
           top: 0,
           height: sectionHeight,
         };
       }
       this.coordsMap[getSectionId(section)] = {
         position: 'absolute',
-        left: gutterSize,
-        width: this.columnWidth * columns + gutterSize * columns,
+        left: this.getPadding(),
+        width: this.columnWidth * columns + itemGutter * (columns - 1),
         top: sectionTop,
-        height: this.getMaxColumnHeight(this.columnHeights) - sectionTop,
+        height: this.getMaxColumnHeight(this.columnHeights) - sectionTop - itemGutter,
       };
       section++;
     }
 
-    this.columnHeights = this.columnHeights.map((height) => height + gutterSize);
+    this.columnHeights = this.columnHeights.map((height) => height - itemGutter + this.getPadding());
     this.totalHeight = this.getMaxColumnHeight();
     // Always reset visible items on a full compute
     this.visibleSections = {};

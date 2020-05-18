@@ -111,7 +111,7 @@ const renderMasonrySection: RenderMasonrySection = (section: number, coords: Uni
 };
 
 const renderMasonryItem = (section: number, item: number, coords: UnitCoords, itemId: string) => {
-  return <img src={itemId} key={itemId} style={{display: 'block', ...coords}} alt="" />;
+  return <img src={itemId} key={itemId} style={coords} className={styles.masonryImage} alt="" />;
 };
 
 function useCatState() {
@@ -274,7 +274,9 @@ export default function App() {
       <MasonryList
         className={styles.container}
         columns={3}
-        gutterSize={8}
+        itemGutter={4}
+        sectionGutter={12}
+        padding={8}
         sections={sections}
         getItemId={getItemId}
         getItemHeight={getItemHeight}

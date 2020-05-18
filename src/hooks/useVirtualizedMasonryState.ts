@@ -22,7 +22,9 @@ interface VirtualizedMasonryProps {
   getSectionHeight?: GetSectionHeight | undefined;
   chunkSize: number | undefined;
   getScrollerState: () => ScrollerState;
-  gutterSize: number;
+  itemGutter: number;
+  sectionGutter?: number | undefined;
+  padding?: number | undefined;
 }
 
 interface VirtualizedMasonryState extends MasonryComputerState {
@@ -39,7 +41,9 @@ export default function useVirtualizedMasonryState({
   getSectionHeight,
   chunkSize = 250,
   getScrollerState,
-  gutterSize,
+  itemGutter,
+  sectionGutter,
+  padding,
 }: VirtualizedMasonryProps): VirtualizedMasonryState {
   const forceUpdate = useForceUpdate();
   const masonryState = useRef<MasonryComputerState>(DEFAULT_ITEM_STATE);
@@ -63,7 +67,9 @@ export default function useVirtualizedMasonryState({
       getItemHeight,
       getSectionHeight,
       bufferWidth,
-      gutterSize,
+      itemGutter,
+      sectionGutter,
+      padding,
     });
     masonryComputer.computeVisibleSections(Math.max(0, chunkStart * chunkSize), chunkEnd * chunkSize);
     return masonryComputer.getState();
@@ -78,7 +84,9 @@ export default function useVirtualizedMasonryState({
     chunkStart,
     chunkEnd,
     chunkSize,
-    gutterSize,
+    itemGutter,
+    sectionGutter,
+    padding,
     bufferWidth,
   ]);
 
