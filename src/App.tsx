@@ -97,21 +97,22 @@ const CAT_SECTIONS: Cat[][] = [
   cats.slice(468),
 ];
 
-const renderMasonrySection: RenderMasonrySection = (section: number, coords: UnitCoords, sectionId: string) => {
+const renderMasonrySection: RenderMasonrySection = (section: number, coords: UnitCoords, sectionKey: string) => {
   return section === CAT_SECTIONS.length ? (
-    <div style={coords} key={sectionId} className={styles.masonryFooter}>
+    <div style={coords} key={sectionKey} className={styles.masonryFooter}>
       <strong>THIS IS AN EXAMPLE FOOTER</strong>
       <span>It uses a section with no items</span>
     </div>
   ) : (
-    <div style={coords} key={sectionId} className={styles.masonrySection}>
+    <div style={coords} key={sectionKey} className={styles.masonrySection}>
       Section {section + 1}
     </div>
   );
 };
 
-const renderMasonryItem = (section: number, item: number, coords: UnitCoords, itemId: string) => {
-  return <img src={itemId} key={itemId} style={coords} className={styles.masonryImage} alt="" />;
+const renderMasonryItem = (section: number, item: number, coords: UnitCoords, itemKey: string) => {
+  const cat = CAT_SECTIONS[section][item];
+  return cat != null ? <img src={cat.src} key={itemKey} style={coords} className={styles.masonryImage} alt="" /> : null;
 };
 
 function useCatState() {
@@ -124,7 +125,7 @@ function useCatState() {
     sections.push(0);
     return sections;
   }, []);
-  const getItemId = useCallback((section: number, item: number) => {
+  const getItemKey = useCallback((section: number, item: number) => {
     return CAT_SECTIONS[section][item].src;
   }, []);
   const getItemHeight = useCallback((section: number, item: number, width: number) => {
@@ -135,7 +136,7 @@ function useCatState() {
   const getSectionHeight = useCallback((section: number) => {
     return section === CAT_SECTIONS.length ? 200 : 40;
   }, []);
-  return {sections, getItemId, getItemHeight, getSectionHeight};
+  return {sections, getItemKey, getItemHeight, getSectionHeight};
 }
 
 function useIsScrolling(): [boolean, () => void] {
@@ -235,7 +236,7 @@ export default function App() {
     setWrapSections(currentTarget.checked);
   }, []);
 
-  const {sections, getItemId, getItemHeight, getSectionHeight} = useCatState();
+  const {sections, getItemKey, getItemHeight, getSectionHeight} = useCatState();
 
   return (
     <div dir={dir} className={styles.wrapper}>
@@ -278,7 +279,7 @@ export default function App() {
         sectionGutter={12}
         padding={8}
         sections={sections}
-        getItemId={getItemId}
+        getItemKey={getItemKey}
         getItemHeight={getItemHeight}
         getSectionHeight={getSectionHeight}
         renderItem={renderMasonryItem}

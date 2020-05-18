@@ -1,12 +1,12 @@
 import {useRef, useState, useMemo} from 'react';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import MasonryListComputer, {getSectionIndex, getSectionHeaderId, getSectionId} from '../core/MasonryListComputer';
+import MasonryListComputer, {getSectionIndex, getSectionHeaderKey, getSectionKey} from '../core/MasonryListComputer';
 import type {ScrollerState} from '../core/SharedTypes';
-import type {GetItemId, GetSectionHeight, GetItemHeight, MasonryComputerState} from '../core/MasonryListComputer';
+import type {GetItemKey, GetSectionHeight, GetItemHeight, MasonryComputerState} from '../core/MasonryListComputer';
 
-export type {GetItemId, GetSectionHeight, GetItemHeight, MasonryComputerState};
-export {getSectionIndex, getSectionId, getSectionHeaderId};
+export type {GetItemKey, GetSectionHeight, GetItemHeight, MasonryComputerState};
+export {getSectionIndex, getSectionKey, getSectionHeaderKey};
 
 const DEFAULT_ITEM_STATE: MasonryComputerState = Object.freeze({
   coordsMap: {},
@@ -17,7 +17,7 @@ const DEFAULT_ITEM_STATE: MasonryComputerState = Object.freeze({
 interface VirtualizedMasonryProps {
   sections: number[];
   columns: number;
-  getItemId: GetItemId;
+  getItemKey: GetItemKey;
   getItemHeight: GetItemHeight;
   getSectionHeight?: GetSectionHeight | undefined;
   chunkSize: number | undefined;
@@ -36,7 +36,7 @@ interface VirtualizedMasonryState extends MasonryComputerState {
 export default function useVirtualizedMasonryState({
   sections,
   columns,
-  getItemId,
+  getItemKey,
   getItemHeight,
   getSectionHeight,
   chunkSize = 250,
@@ -63,7 +63,7 @@ export default function useVirtualizedMasonryState({
     masonryComputer.mergeProps({
       sections,
       columns,
-      getItemId,
+      getItemKey,
       getItemHeight,
       getSectionHeight,
       bufferWidth,
@@ -78,7 +78,7 @@ export default function useVirtualizedMasonryState({
     masonryComputer,
     sections,
     columns,
-    getItemId,
+    getItemKey,
     getItemHeight,
     getSectionHeight,
     chunkStart,

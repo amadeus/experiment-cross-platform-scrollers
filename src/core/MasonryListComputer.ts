@@ -15,9 +15,9 @@ export type VisibleSections = {
   [section: string]: [string, number, number][];
 };
 
-export type CoordsMap = {[itemId: string]: UnitCoords | undefined};
+export type CoordsMap = {[itemKey: string]: UnitCoords | undefined};
 export type Grid = string[][];
-export type GetItemId = (section: number, item: number) => string;
+export type GetItemKey = (section: number, item: number) => string;
 export type GetSectionHeight = (section: number) => number;
 export type GetItemHeight = (section: number, item: number, columnWidth: number) => number;
 
@@ -34,14 +34,14 @@ export type ListComputerProps = Partial<{
   sectionGutter: number | null;
   padding: number | null;
   getSectionHeight: GetSectionHeight;
-  getItemId: GetItemId;
+  getItemKey: GetItemKey;
   getItemHeight: GetItemHeight;
   bufferWidth: number;
 }>;
 
-export const getSectionId = (section: number) => `__section__${section}`;
-export const getSectionHeaderId = (section: number) => `__section_header__${section}`;
-export const getSectionIndex = (sectionId: string) => parseInt(sectionId.replace(/^__section__/, ''), 10);
+export const getSectionKey = (section: number) => `__section__${section}`;
+export const getSectionHeaderKey = (section: number) => `__section_header__${section}`;
+export const getSectionIndex = (sectionKey: string) => parseInt(sectionKey.replace(/^__section__/, ''), 10);
 
 function getMinColumn(columns: number[]): [number, number] {
   return columns.reduce(
@@ -71,8 +71,8 @@ export default class MasonryListComputer {
   private itemGutter: number = 0;
   private sectionGutter: number | null = null;
   private padding: number | null = null;
-  private getItemId: GetItemId = () => {
-    throw new Error('MasonryListComputer: getItemId has not been implemented');
+  private getItemKey: GetItemKey = () => {
+    throw new Error('MasonryListComputer: getItemKey has not been implemented');
   };
   private getItemHeight: GetItemHeight = () => {
     throw new Error('MasonryListComputer: getItemHeight has not been implemented');
@@ -91,7 +91,7 @@ export default class MasonryListComputer {
     sections = this.sections,
     columns = this.columns,
     itemGutter = this.itemGutter,
-    getItemId = this.getItemId,
+    getItemKey = this.getItemKey,
     getItemHeight = this.getItemHeight,
     getSectionHeight = this.getSectionHeight,
     bufferWidth = this.bufferWidth,
@@ -102,7 +102,7 @@ export default class MasonryListComputer {
       this.sections === sections &&
       this.columns === columns &&
       this.itemGutter === itemGutter &&
-      this.getItemId === getItemId &&
+      this.getItemKey === getItemKey &&
       this.getSectionHeight === getSectionHeight &&
       this.getItemHeight === getItemHeight &&
       this.bufferWidth === bufferWidth &&
@@ -115,7 +115,7 @@ export default class MasonryListComputer {
     this.sections = sections;
     this.columns = columns;
     this.itemGutter = itemGutter;
-    this.getItemId = getItemId;
+    this.getItemKey = getItemKey;
     this.getSectionHeight = getSectionHeight;
     this.getItemHeight = getItemHeight;
     this.bufferWidth = bufferWidth;
@@ -127,7 +127,7 @@ export default class MasonryListComputer {
     if (!this.needsFullCompute) {
       return;
     }
-    const {columns, getItemId, getItemHeight, itemGutter, getSectionHeight, bufferWidth} = this;
+    const {columns, getItemKey, getItemHeight, itemGutter, getSectionHeight, bufferWidth} = this;
     this.coordsMap = {};
     this.columnHeights = new Array(columns).fill(this.getPadding());
     this.columnWidth = (bufferWidth - this.getPadding() * 2 - itemGutter * (columns - 1)) / columns;
@@ -146,7 +146,7 @@ export default class MasonryListComputer {
         this.columnHeights[i] = sectionTop + sectionOffset;
       }
       while (item < items) {
-        const id = getItemId(section, item);
+        const id = getItemKey(section, item);
         // Items that don't have an ID don't get computed
         if (id == null) {
           item++;
@@ -168,7 +168,7 @@ export default class MasonryListComputer {
         item++;
       }
       if (sectionHeight > 0) {
-        this.coordsMap[getSectionHeaderId(section)] = {
+        this.coordsMap[getSectionHeaderKey(section)] = {
           position: 'sticky',
           left: 0,
           width: this.columnWidth * columns + itemGutter * columns,
@@ -176,7 +176,7 @@ export default class MasonryListComputer {
           height: sectionHeight,
         };
       }
-      this.coordsMap[getSectionId(section)] = {
+      this.coordsMap[getSectionKey(section)] = {
         position: 'absolute',
         left: this.getPadding(),
         width: this.columnWidth * columns + itemGutter * (columns - 1),
@@ -196,13 +196,13 @@ export default class MasonryListComputer {
   computeVisibleSections(bufferTop: number, bufferBottom: number) {
     // This will return early if the compute is not needed
     this.computeFullCoords();
-    const {getItemId, coordsMap} = this;
+    const {getItemKey, coordsMap} = this;
     this.visibleSections = {};
     let section = 0;
     while (section < this.sections.length) {
       const items = this.sections[section];
-      const sectionId = getSectionId(section);
-      const sectionCoords = coordsMap[sectionId];
+      const sectionKey = getSectionKey(section);
+      const sectionCoords = coordsMap[sectionKey];
       // If we don't have coords for this section, we can't compute it's visibility
       if (sectionCoords == null) {
         section++;
@@ -231,9 +231,9 @@ export default class MasonryListComputer {
         increment = -1;
       }
 
-      this.visibleSections[sectionId] = [];
+      this.visibleSections[sectionKey] = [];
       while (item >= 0 && item < items) {
-        const id = getItemId(section, item);
+        const id = getItemKey(section, item);
         const coords = coordsMap[id];
         // If we don't have coords for this item, we can't compute it's visibility
         if (id == null || coords == null) {
@@ -242,7 +242,7 @@ export default class MasonryListComputer {
         }
         const {top, height} = coords;
         if (top + sectionTop > bufferTop - height && top + sectionTop < bufferBottom) {
-          this.visibleSections[sectionId].push([id, section, item]);
+          this.visibleSections[sectionKey].push([id, section, item]);
         }
         item += increment;
       }
