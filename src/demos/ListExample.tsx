@@ -70,6 +70,7 @@ export default memo(({size, dir}: ListExampleProps) => {
     <List
       // NOTE(amadeus): Add scroll toggling control to this
       ref={ref}
+      dir={dir}
       onScroll={handleScroll}
       className={classes.join(' ')}
       sections={LIST_SECTIONS}
