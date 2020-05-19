@@ -48,7 +48,5 @@ export default function getScrollbarSpecs(className: string = ''): ScrollerSpecs
   outerEl.className = className;
   const specs = {width: outerEl.offsetWidth - outerEl.clientWidth, height: outerEl.offsetHeight - outerEl.clientHeight};
   document.body.removeChild(outerEl);
-  // NOTE(amadeus): Remove this when actually integrating
-  console.log('browser detected scrollbar specs', specs);
   return specs;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './App.module.css';
+import styles from './Demo.module.css';
 
 export default function generateRow(key: number | string): React.ReactNode {
   return (

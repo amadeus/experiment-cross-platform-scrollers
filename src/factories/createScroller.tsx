@@ -1,11 +1,11 @@
 import React, {useImperativeHandle, forwardRef} from 'react';
-import usePaddingFixes from './hooks/usePaddingFixes';
-import useAnimatedScroll from './hooks/useAnimatedScroll';
-import getScrollbarSpecs from './core/getScrollbarSpecs';
-import styles from './Scroller.module.css';
-import type {ScrollerBaseProps, ScrollerState} from './core/SharedTypes';
-import type {ScrollIntoViewProps, ScrollToProps} from './hooks/useAnimatedScroll';
-import useUncachedScrollerState from './hooks/useUncachedScrollerState';
+import usePaddingFixes from '../hooks/usePaddingFixes';
+import useAnimatedScroll from '../hooks/useAnimatedScroll';
+import getScrollbarSpecs from '../core/getScrollbarSpecs';
+import styles from './Shared.module.css';
+import type {ScrollerBaseProps, ScrollerState} from '../core/SharedTypes';
+import type {ScrollIntoViewProps, ScrollToProps} from '../hooks/useAnimatedScroll';
+import useUncachedScrollerState from '../hooks/useUncachedScrollerState';
 
 // Your basic Scroller component.  It's flexible in that it can have state
 // queried and scroll positions set as needed.  It also includes the basic

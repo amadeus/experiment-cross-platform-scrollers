@@ -1,8 +1,8 @@
 import React, {useRef} from 'react';
-import usePaddingFixes from './hooks/usePaddingFixes';
-import getScrollbarSpecs from './core/getScrollbarSpecs';
-import styles from './Scroller.module.css';
-import type {ScrollerBaseProps} from './core/SharedTypes';
+import usePaddingFixes from '../hooks/usePaddingFixes';
+import getScrollbarSpecs from '../core/getScrollbarSpecs';
+import styles from './Shared.module.css';
+import type {ScrollerBaseProps} from '../core/SharedTypes';
 
 // CSSScroller is a component that does nothing but allow tall content to
 // overflow and scroll.  No need for ref handling, or scrolling state.  It's

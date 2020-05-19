@@ -1,12 +1,12 @@
 import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect} from 'react';
-import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
-import useVirtualizedState from './hooks/useVirtualizedState';
-import useAnimatedListScroll from './hooks/useAnimatedListScroll';
-import useCachedScrollerState from './hooks/useCachedScrollerState';
-import usePaddingFixes from './hooks/usePaddingFixes';
-import getScrollbarSpecs from './core/getScrollbarSpecs';
-import styles from './Scroller.module.css';
-import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from './hooks/useAnimatedListScroll';
+import useResizeObserverSubscription from '../hooks/useResizeObserverSubscription';
+import useVirtualizedState from '../hooks/useVirtualizedState';
+import useAnimatedListScroll from '../hooks/useAnimatedListScroll';
+import useCachedScrollerState from '../hooks/useCachedScrollerState';
+import usePaddingFixes from '../hooks/usePaddingFixes';
+import getScrollbarSpecs from '../core/getScrollbarSpecs';
+import styles from './Shared.module.css';
+import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from '../hooks/useAnimatedListScroll';
 import type {
   SectionHeight,
   RowHeight,
@@ -15,8 +15,8 @@ import type {
   ListItemSection,
   ListItemRow,
   ListItemFooter,
-} from './hooks/useVirtualizedState';
-import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from './core/SharedTypes';
+} from '../hooks/useVirtualizedState';
+import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from '../core/SharedTypes';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
 // with a List component is that it can be rendering a tremendous amount of

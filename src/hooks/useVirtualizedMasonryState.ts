@@ -25,6 +25,7 @@ interface VirtualizedMasonryProps {
   itemGutter: number;
   sectionGutter?: number | undefined;
   padding?: number | undefined;
+  dir: 'ltr' | 'rtl';
 }
 
 interface VirtualizedMasonryState extends MasonryComputerState {
@@ -44,6 +45,7 @@ export default function useVirtualizedMasonryState({
   itemGutter,
   sectionGutter,
   padding,
+  dir,
 }: VirtualizedMasonryProps): VirtualizedMasonryState {
   const forceUpdate = useForceUpdate();
   const masonryState = useRef<MasonryComputerState>(DEFAULT_ITEM_STATE);
@@ -70,6 +72,7 @@ export default function useVirtualizedMasonryState({
       itemGutter,
       sectionGutter,
       padding,
+      dir,
     });
     masonryComputer.computeVisibleSections(Math.max(0, chunkStart * chunkSize), chunkEnd * chunkSize);
     return masonryComputer.getState();
@@ -88,6 +91,7 @@ export default function useVirtualizedMasonryState({
     sectionGutter,
     padding,
     bufferWidth,
+    dir,
   ]);
 
   return {...masonryState.current, masonryComputer, forceUpdateOnChunkChange, forceUpdate};

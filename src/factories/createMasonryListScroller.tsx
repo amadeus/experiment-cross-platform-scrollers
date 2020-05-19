@@ -1,14 +1,14 @@
 import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} from 'react';
-import useResizeObserverSubscription from './hooks/useResizeObserverSubscription';
-import useAnimatedScroll from './hooks/useAnimatedScroll';
-import useVirtualizedMasonryState, {getSectionIndex, getSectionHeaderKey} from './hooks/useVirtualizedMasonryState';
-import usePaddingFixes from './hooks/usePaddingFixes';
-import getScrollbarSpecs from './core/getScrollbarSpecs';
-import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from './core/SharedTypes';
-import type {ScrollToProps, ScrollIntoViewProps} from './hooks/useAnimatedScroll';
-import type {GetItemKey, GetSectionHeight, GetItemHeight, UnitCoords} from './core/MasonryListComputer';
-import useCachedScrollerState from './hooks/useCachedScrollerState';
-import styles from './Scroller.module.css';
+import useResizeObserverSubscription from '../hooks/useResizeObserverSubscription';
+import useAnimatedScroll from '../hooks/useAnimatedScroll';
+import useVirtualizedMasonryState, {getSectionIndex, getSectionHeaderKey} from '../hooks/useVirtualizedMasonryState';
+import usePaddingFixes from '../hooks/usePaddingFixes';
+import getScrollbarSpecs from '../core/getScrollbarSpecs';
+import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from '../core/SharedTypes';
+import type {ScrollToProps, ScrollIntoViewProps} from '../hooks/useAnimatedScroll';
+import type {GetItemKey, GetSectionHeight, GetItemHeight, UnitCoords} from '../core/MasonryListComputer';
+import useCachedScrollerState from '../hooks/useCachedScrollerState';
+import styles from './Shared.module.css';
 
 export type {UnitCoords};
 
@@ -93,6 +93,7 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
         sectionGutter,
         padding,
         getScrollerState,
+        dir,
       }
     );
     const markStateDirty = useCallback(
