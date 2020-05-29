@@ -2,8 +2,8 @@ import React, {useImperativeHandle, forwardRef} from 'react';
 import usePaddingFixes from '../hooks/usePaddingFixes';
 import useAnimatedScroll from '../hooks/useAnimatedScroll';
 import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import styles from './Shared.module.css';
-import type {ScrollerBaseProps, ScrollerState} from '../core/SharedTypes';
+import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
+import type {ScrollerBaseProps, ScrollerState, OrientationTypes} from '../core/SharedTypes';
 import type {ScrollIntoViewProps, ScrollToProps} from '../hooks/useAnimatedScroll';
 import useUncachedScrollerState from '../hooks/useUncachedScrollerState';
 
@@ -19,13 +19,14 @@ export interface ScrollerRef {
 }
 
 export interface ScrollerProps extends ScrollerBaseProps {
+  orientation?: OrientationTypes;
   children: React.ReactNode;
 }
 
 export default function createScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   return forwardRef(function Scroller(
-    {children, className, dir = 'ltr', orientation = 'vertical', paddingFix = true, ...props}: ScrollerProps,
+    {children, className, dir = 'ltr', orientation = 'vertical', paddingFix = true, style, ...props}: ScrollerProps,
     ref: React.Ref<ScrollerRef>
   ) {
     const {scrollerRef, getScrollerState} = useUncachedScrollerState();
@@ -42,16 +43,13 @@ export default function createScroller(scrollbarClassName?: string) {
       }),
       [scrollerRef, getScrollerState, scrollTo, scrollIntoView]
     );
-    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
-    const classes = [
-      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
-      scrollbarClassName,
-      className,
-    ].filter((str) => str != null);
+    const paddingNode = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
+    const classes = [scrollbarClassName, className].filter((str) => str != null);
+    const mergedStyles = getMergedOrientationStyles(orientation, style);
     return (
-      <div ref={scrollerRef} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} className={classes.join(' ')} style={mergedStyles} {...props}>
         {children}
-        {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
+        {paddingNode}
       </div>
     );
   });

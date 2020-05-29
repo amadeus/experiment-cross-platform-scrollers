@@ -1,8 +1,8 @@
 import React, {useRef} from 'react';
 import usePaddingFixes from '../hooks/usePaddingFixes';
 import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import styles from './Shared.module.css';
-import type {ScrollerBaseProps} from '../core/SharedTypes';
+import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
+import type {ScrollerBaseProps, OrientationTypes} from '../core/SharedTypes';
 
 // CSSScroller is a component that does nothing but allow tall content to
 // overflow and scroll.  No need for ref handling, or scrolling state.  It's
@@ -10,6 +10,7 @@ import type {ScrollerBaseProps} from '../core/SharedTypes';
 // Most of the time you probably want to use this
 
 export interface CSSScrollerProps extends ScrollerBaseProps {
+  orientation?: OrientationTypes;
   children: React.ReactNode;
 }
 
@@ -21,19 +22,17 @@ export default function createScroller(scrollbarClassName?: string) {
     dir = 'ltr',
     orientation = 'vertical',
     paddingFix = true,
+    style,
     ...props
   }: CSSScrollerProps) {
     const scrollerRef = useRef<HTMLDivElement>(null);
-    const spacingRef = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
-    const classes = [
-      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
-      scrollbarClassName,
-      className,
-    ].filter((str) => str != null);
+    const paddingNode = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
+    const classes = [scrollbarClassName, className].filter((str) => str != null);
+    const mergedStyles = getMergedOrientationStyles(orientation, style);
     return (
-      <div ref={scrollerRef} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} className={classes.join(' ')} style={mergedStyles} {...props}>
         {children}
-        {orientation !== 'auto' && paddingFix && <div aria-hidden className={styles.padding} ref={spacingRef} />}
+        {paddingNode}
       </div>
     );
   };

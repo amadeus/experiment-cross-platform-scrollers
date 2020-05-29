@@ -5,7 +5,7 @@ import useAnimatedListScroll from '../hooks/useAnimatedListScroll';
 import useCachedScrollerState from '../hooks/useCachedScrollerState';
 import usePaddingFixes from '../hooks/usePaddingFixes';
 import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import styles from './Shared.module.css';
+import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
 import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from '../hooks/useAnimatedListScroll';
 import type {
   SectionHeight,
@@ -170,7 +170,6 @@ export default function createListScroller(scrollbarClassName?: string) {
       className,
       onScroll,
       dir = 'ltr',
-      orientation = 'vertical',
       paddingFix = true,
       sections,
       sectionHeight,
@@ -183,12 +182,13 @@ export default function createListScroller(scrollbarClassName?: string) {
       paddingTop,
       paddingBottom,
       chunkSize,
+      style,
       ...props
     },
     ref
   ) {
     const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
-    usePaddingFixes({scrollerRef, className, specs, orientation, dir});
+    usePaddingFixes({scrollerRef, className, specs, orientation: 'vertical', dir});
     // Wrapper around the content of the scroller - used for both resize
     // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);
@@ -256,13 +256,10 @@ export default function createListScroller(scrollbarClassName?: string) {
       },
       [onScroll, markStateDirty]
     );
-    const classes = [
-      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
-      scrollbarClassName,
-      className,
-    ].filter((str) => str != null);
+    const classes = [scrollbarClassName, className].filter((str) => str != null);
+    const mergedStyles = getMergedOrientationStyles('vertical', style);
     return (
-      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} style={mergedStyles} {...props}>
         {useMemo(
           () => (
             <div ref={content} style={{height: totalHeight}}>

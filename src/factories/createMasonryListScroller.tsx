@@ -4,11 +4,11 @@ import useAnimatedScroll from '../hooks/useAnimatedScroll';
 import useVirtualizedMasonryState, {getSectionIndex, getSectionHeaderKey} from '../hooks/useVirtualizedMasonryState';
 import usePaddingFixes from '../hooks/usePaddingFixes';
 import getScrollbarSpecs from '../core/getScrollbarSpecs';
+import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
 import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from '../core/SharedTypes';
 import type {ScrollToProps, ScrollIntoViewProps} from '../hooks/useAnimatedScroll';
 import type {GetItemKey, GetSectionHeight, GetItemHeight, UnitCoords} from '../core/MasonryListComputer';
 import useCachedScrollerState from '../hooks/useCachedScrollerState';
-import styles from './Shared.module.css';
 
 export type {UnitCoords};
 
@@ -58,7 +58,6 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
   return forwardRef<MasonryListScrollerRef, MasonryListScrollerProps>(function MasonryListScroller(
     {
       onScroll,
-      orientation = 'vertical',
       dir = 'ltr',
       sections,
       columns,
@@ -72,12 +71,13 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       sectionGutter,
       padding,
       className,
+      style,
       ...props
     },
     ref
   ) {
     const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
-    usePaddingFixes({scrollerRef, className, specs, orientation, dir});
+    usePaddingFixes({scrollerRef, className, specs, orientation: 'vertical', dir});
     // Wrapper around the content of the scroller - used for both resize
     // observations and total scrollable height
     const content = useRef<HTMLDivElement>(null);
@@ -132,13 +132,10 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
       },
       [onScroll, markStateDirty]
     );
-    const classes = [
-      orientation === 'vertical' ? styles.vertical : orientation === 'horizontal' ? styles.horizontal : styles.auto,
-      scrollbarClassName,
-      className,
-    ].filter((str) => str != null);
+    const classes = [scrollbarClassName, className].filter((str) => str != null);
+    const mergedStyles = getMergedOrientationStyles('vertical', style);
     return (
-      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} {...props}>
+      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} style={mergedStyles} {...props}>
         {useMemo(
           () => (
             <div ref={content} style={{height: totalHeight}}>

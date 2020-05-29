@@ -1,9 +1,17 @@
-import {useRef, useLayoutEffect} from 'react';
+import React, {useRef, useLayoutEffect, useMemo} from 'react';
 import type {ScrollerSpecs} from '../core/getScrollbarSpecs';
+import type {OrientationTypes} from '../core/SharedTypes';
+
+const DEFAULT_STYLES = Object.freeze({
+  pointerEvents: 'none',
+  minHeight: 1,
+  minWidth: 1,
+  flex: '0 0 auto',
+} as const);
 
 interface PaddingFixProps {
   paddingFix?: boolean;
-  orientation: 'vertical' | 'horizontal' | 'auto';
+  orientation: OrientationTypes;
   dir: 'ltr' | 'rtl';
   className: string | null | undefined;
   scrollerRef: React.RefObject<HTMLDivElement>;
@@ -56,5 +64,18 @@ export default function usePaddingFixes({
       }
     }
   }, [orientation, dir, className, scrollerRef, paddingFix, specs]);
-  return spacingRef;
+  return useMemo(
+    () =>
+      orientation !== 'auto' ? (
+        <div
+          aria-hidden
+          style={{
+            position: orientation === 'vertical' ? 'absolute' : 'relative',
+            ...DEFAULT_STYLES,
+          }}
+          ref={spacingRef}
+        />
+      ) : null,
+    [orientation]
+  );
 }
