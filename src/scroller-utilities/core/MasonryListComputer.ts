@@ -1,4 +1,4 @@
-export interface UnitCoords {
+export interface MasonryListUnitCoords {
   position: 'absolute' | 'sticky';
   top: number;
   left?: number;
@@ -7,43 +7,38 @@ export interface UnitCoords {
   height: number;
 }
 
-export type GridItem = {
-  coords: UnitCoords;
-  id: string;
-};
-
-export type VisibleSections = {
+export type MasonryListVisibleSections = {
   [section: string]: [string, number, number][];
 };
 
-export type CoordsMap = {[itemKey: string]: UnitCoords | undefined};
-export type Grid = string[][];
-export type GetItemKey = (section: number, item: number) => string;
-export type GetSectionHeight = (section: number) => number;
-export type GetItemHeight = (section: number, item: number, columnWidth: number) => number;
+export type MasonryListCoordsMap = {[itemKey: string]: MasonryListUnitCoords | undefined};
+export type MasonryListGrid = string[][];
+export type MasonryListGetItemKey = (section: number, item: number) => string;
+export type MasonryListGetSectionHeight = (section: number) => number;
+export type MasonryListGetItemHeight = (section: number, item: number, columnWidth: number) => number;
 
-export interface MasonryComputerState {
-  coordsMap: CoordsMap;
-  visibleSections: VisibleSections;
+export interface MasonryListComputerState {
+  coordsMap: MasonryListCoordsMap;
+  visibleSections: MasonryListVisibleSections;
   totalHeight: number;
 }
 
-export type ListComputerProps = Partial<{
+export type MasonryListComputerProps = Partial<{
   dir: 'ltr' | 'rtl';
   sections: number[];
   columns: number;
   itemGutter: number;
   sectionGutter: number | null;
   padding: number | null;
-  getSectionHeight: GetSectionHeight;
-  getItemKey: GetItemKey;
-  getItemHeight: GetItemHeight;
+  getSectionHeight: MasonryListGetSectionHeight;
+  getItemKey: MasonryListGetItemKey;
+  getItemHeight: MasonryListGetItemHeight;
   bufferWidth: number;
 }>;
 
-export const getSectionKey = (section: number) => `__section__${section}`;
-export const getSectionHeaderKey = (section: number) => `__section_header__${section}`;
-export const getSectionIndex = (sectionKey: string) => parseInt(sectionKey.replace(/^__section__/, ''), 10);
+export const getMasonryListSectionKey = (section: number) => `__section__${section}`;
+export const getMasonryListSectionHeaderKey = (section: number) => `__section_header__${section}`;
+export const getMasonryListSectionIndex = (sectionKey: string) => parseInt(sectionKey.replace(/^__section__/, ''), 10);
 
 function getMinColumn(columns: number[]): [number, number] {
   return columns.reduce(
@@ -60,12 +55,12 @@ function getMinColumn(columns: number[]): [number, number] {
 const DEFAULT_HEIGHT = () => 0;
 
 export default class MasonryListComputer {
-  visibleSections: VisibleSections = {};
-  coordsMap: CoordsMap = {};
+  visibleSections: MasonryListVisibleSections = {};
+  coordsMap: MasonryListCoordsMap = {};
   columnHeights: number[] = [];
   columnWidth: number = 0;
   totalHeight: number = 0;
-  itemGrid: Grid = [];
+  itemGrid: MasonryListGrid = [];
   private needsFullCompute: boolean = true;
   private bufferWidth = 0;
   private sections: number[] = [];
@@ -74,13 +69,13 @@ export default class MasonryListComputer {
   private sectionGutter: number | null = null;
   private padding: number | null = null;
   private dir: 'ltr' | 'rtl' = 'ltr';
-  private getItemKey: GetItemKey = () => {
+  private getItemKey: MasonryListGetItemKey = () => {
     throw new Error('MasonryListComputer: getItemKey has not been implemented');
   };
-  private getItemHeight: GetItemHeight = () => {
+  private getItemHeight: MasonryListGetItemHeight = () => {
     throw new Error('MasonryListComputer: getItemHeight has not been implemented');
   };
-  private getSectionHeight: GetSectionHeight = DEFAULT_HEIGHT;
+  private getSectionHeight: MasonryListGetSectionHeight = DEFAULT_HEIGHT;
 
   private getPadding() {
     return this.padding != null ? this.padding : this.itemGutter;
@@ -101,7 +96,7 @@ export default class MasonryListComputer {
     padding = this.padding,
     sectionGutter = this.sectionGutter,
     dir = this.dir,
-  }: ListComputerProps) {
+  }: MasonryListComputerProps) {
     if (
       this.sections === sections &&
       this.columns === columns &&
@@ -161,7 +156,7 @@ export default class MasonryListComputer {
         }
         const [top, columnIndex] = getMinColumn(this.columnHeights);
         const height = getItemHeight(section, item, this.columnWidth);
-        const coords: UnitCoords = {
+        const coords: MasonryListUnitCoords = {
           position: 'absolute',
           [xCoord]: this.columnWidth * columnIndex + itemGutter * (columnIndex + 1) - itemGutter,
           width: this.columnWidth,
@@ -175,7 +170,7 @@ export default class MasonryListComputer {
         item++;
       }
       if (sectionHeight > 0) {
-        this.coordsMap[getSectionHeaderKey(section)] = {
+        this.coordsMap[getMasonryListSectionHeaderKey(section)] = {
           position: 'sticky',
           [xCoord]: 0,
           width: this.columnWidth * columns + itemGutter * columns,
@@ -183,7 +178,7 @@ export default class MasonryListComputer {
           height: sectionHeight,
         };
       }
-      this.coordsMap[getSectionKey(section)] = {
+      this.coordsMap[getMasonryListSectionKey(section)] = {
         position: 'absolute',
         [xCoord]: this.getPadding(),
         width: this.columnWidth * columns + itemGutter * (columns - 1),
@@ -208,7 +203,7 @@ export default class MasonryListComputer {
     let section = 0;
     while (section < this.sections.length) {
       const items = this.sections[section];
-      const sectionKey = getSectionKey(section);
+      const sectionKey = getMasonryListSectionKey(section);
       const sectionCoords = coordsMap[sectionKey];
       // If we don't have coords for this section, we can't compute it's visibility
       if (sectionCoords == null) {
@@ -266,7 +261,7 @@ export default class MasonryListComputer {
     return columnHeights.reduce((acc, height) => Math.max(acc, height), 0);
   }
 
-  getState(): MasonryComputerState {
+  getState(): MasonryListComputerState {
     return {
       coordsMap: this.coordsMap,
       visibleSections: this.visibleSections,

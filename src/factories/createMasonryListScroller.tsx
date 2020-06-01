@@ -1,16 +1,27 @@
 import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} from 'react';
-import useResizeObserverSubscription from '../hooks/useResizeObserverSubscription';
-import useAnimatedScroll from '../hooks/useAnimatedScroll';
-import useVirtualizedMasonryState, {getSectionIndex, getSectionHeaderKey} from '../hooks/useVirtualizedMasonryState';
-import usePaddingFixes from '../hooks/usePaddingFixes';
-import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
-import type {ScrollEvent, UpdateCallback, ScrollerState, ScrollerBaseProps} from '../core/SharedTypes';
-import type {ScrollToProps, ScrollIntoViewProps} from '../hooks/useAnimatedScroll';
-import type {GetItemKey, GetSectionHeight, GetItemHeight, UnitCoords} from '../core/MasonryListComputer';
-import useCachedScrollerState from '../hooks/useCachedScrollerState';
-
-export type {UnitCoords};
+import {
+  useResizeObserverSubscription,
+  useAnimatedScroll,
+  useVirtualizedMasonryState,
+  getMasonryListSectionIndex,
+  getMasonryListSectionHeaderKey,
+  usePaddingFixes,
+  getScrollbarSpecs,
+  getMergedOrientationStyles,
+  useCachedScrollerState,
+} from '../scroller-utilities';
+import type {
+  ScrollEvent,
+  ResizeObserverUpdateCallback,
+  ScrollerState,
+  ScrollerComponentBaseProps,
+  ScrollToProps,
+  ScrollIntoViewProps,
+  MasonryListGetItemKey,
+  MasonryListGetSectionHeight,
+  MasonryListGetItemHeight,
+  MasonryListUnitCoords,
+} from '../scroller-utilities';
 
 export interface MasonryListScrollerRef {
   getScrollerNode: () => HTMLDivElement | null;
@@ -19,6 +30,7 @@ export interface MasonryListScrollerRef {
   scrollIntoView: (props: ScrollIntoViewProps) => void;
 
   // NOTE(amadeus): This will probably need to be tweaked a bit to accomodate Masonry's differing API
+  // NOTE(amadeus): Need to implement these APIs still...
   // scrollToIndex: (props: ScrollToIndexProps) => void;
   // isItemVisible: (section: number, row?: number | undefined) => boolean;
   // getScrollPosition: (section: number, row?: number | undefined, completely?: boolean) => [number, number];
@@ -26,18 +38,23 @@ export interface MasonryListScrollerRef {
   // getSectionRowFromIndex: (index: number) => [number, number];
 }
 
-export type RenderSection = (section: number, coords: UnitCoords, sectionKey: string) => React.ReactNode;
-export type RenderItem = (section: number, item: number, coords: UnitCoords, itemKey: string) => React.ReactNode;
+export type RenderSection = (section: number, coords: MasonryListUnitCoords, sectionKey: string) => React.ReactNode;
+export type RenderItem = (
+  section: number,
+  item: number,
+  coords: MasonryListUnitCoords,
+  itemKey: string
+) => React.ReactNode;
 
-export interface MasonryListScrollerProps extends ScrollerBaseProps {
+export interface MasonryListScrollerProps extends ScrollerComponentBaseProps {
   columns: number;
   itemGutter: number;
   sectionGutter?: number;
   padding?: number;
   sections: number[];
-  getItemKey: GetItemKey;
-  getSectionHeight?: GetSectionHeight;
-  getItemHeight: GetItemHeight;
+  getItemKey: MasonryListGetItemKey;
+  getSectionHeight?: MasonryListGetSectionHeight;
+  getItemHeight: MasonryListGetItemHeight;
   renderSection?: RenderSection;
   renderItem: RenderItem;
   chunkSize?: number;
@@ -45,7 +62,7 @@ export interface MasonryListScrollerProps extends ScrollerBaseProps {
 
 export default function createMasonryListScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
-  const listenerMap = new Map<Element, UpdateCallback>();
+  const listenerMap = new Map<Element, ResizeObserverUpdateCallback>();
   const resizeObserver =
     ResizeObserver != null
       ? new ResizeObserver((entries) => {
@@ -140,10 +157,10 @@ export default function createMasonryListScroller(scrollbarClassName?: string) {
           () => (
             <div ref={content} style={{height: totalHeight}}>
               {Object.keys(visibleSections).map((sectionKey) => {
-                const section = getSectionIndex(sectionKey);
+                const section = getMasonryListSectionIndex(sectionKey);
                 const sectionCoords = coordsMap[sectionKey];
                 const visibleItems = visibleSections[sectionKey];
-                const sectionHeaderCoords = coordsMap[getSectionHeaderKey(section)];
+                const sectionHeaderCoords = coordsMap[getMasonryListSectionHeaderKey(section)];
                 return sectionCoords != null && visibleItems != null ? (
                   <div style={sectionCoords} key={sectionKey}>
                     {renderSection != null &&

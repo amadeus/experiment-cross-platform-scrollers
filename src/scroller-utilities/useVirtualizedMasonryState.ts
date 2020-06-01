@@ -1,25 +1,27 @@
 import {useRef, useState, useMemo} from 'react';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import MasonryListComputer, {getSectionIndex, getSectionHeaderKey, getSectionKey} from '../core/MasonryListComputer';
-import type {ScrollerState} from '../core/SharedTypes';
-import type {GetItemKey, GetSectionHeight, GetItemHeight, MasonryComputerState} from '../core/MasonryListComputer';
+import MasonryListComputer from './core/MasonryListComputer';
+import type {ScrollerState} from './core/SharedTypes';
+import type {
+  MasonryListGetItemKey,
+  MasonryListGetSectionHeight,
+  MasonryListGetItemHeight,
+  MasonryListComputerState,
+} from './core/MasonryListComputer';
 
-export type {GetItemKey, GetSectionHeight, GetItemHeight, MasonryComputerState};
-export {getSectionIndex, getSectionKey, getSectionHeaderKey};
-
-const DEFAULT_ITEM_STATE: MasonryComputerState = Object.freeze({
+const DEFAULT_ITEM_STATE: MasonryListComputerState = Object.freeze({
   coordsMap: {},
   visibleSections: {},
   totalHeight: 0,
 });
 
-interface VirtualizedMasonryProps {
+export interface VirtualizedMasonryProps {
   sections: number[];
   columns: number;
-  getItemKey: GetItemKey;
-  getItemHeight: GetItemHeight;
-  getSectionHeight?: GetSectionHeight | undefined;
+  getItemKey: MasonryListGetItemKey;
+  getItemHeight: MasonryListGetItemHeight;
+  getSectionHeight?: MasonryListGetSectionHeight | undefined;
   chunkSize: number | undefined;
   getScrollerState: () => ScrollerState;
   itemGutter: number;
@@ -28,7 +30,7 @@ interface VirtualizedMasonryProps {
   dir: 'ltr' | 'rtl';
 }
 
-interface VirtualizedMasonryState extends MasonryComputerState {
+export interface VirtualizedMasonryUseState extends MasonryListComputerState {
   masonryComputer: MasonryListComputer;
   forceUpdateOnChunkChange: (dirtyType: 1 | 2) => void;
   forceUpdate: () => void;
@@ -46,9 +48,9 @@ export default function useVirtualizedMasonryState({
   sectionGutter,
   padding,
   dir,
-}: VirtualizedMasonryProps): VirtualizedMasonryState {
+}: VirtualizedMasonryProps): VirtualizedMasonryUseState {
   const forceUpdate = useForceUpdate();
-  const masonryState = useRef<MasonryComputerState>(DEFAULT_ITEM_STATE);
+  const masonryState = useRef<MasonryListComputerState>(DEFAULT_ITEM_STATE);
   const [masonryComputer] = useState(() => new MasonryListComputer());
   const scrollerState = getScrollerState();
   const {offsetWidth: bufferWidth} = scrollerState;

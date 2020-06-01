@@ -1,5 +1,5 @@
 import type React from 'react';
-import type {OrientationTypes} from './SharedTypes';
+import type {ScrollerOrientationTypes} from './SharedTypes';
 
 export const STYLES_VERTICAL = Object.freeze({
   overflowY: 'scroll',
@@ -16,7 +16,7 @@ export const STYLES_AUTO = Object.freeze({
 } as const);
 
 export default function getMergedOrientationStyles(
-  orientation: OrientationTypes = 'vertical',
+  orientation: ScrollerOrientationTypes = 'vertical',
   style: React.CSSProperties | undefined
 ): React.CSSProperties {
   const orientationStyle =

@@ -1,7 +1,11 @@
 import {useRef, useCallback, useLayoutEffect} from 'react';
-import type {ScrollerState} from '../core/SharedTypes';
+import type {ScrollerState} from './core/SharedTypes';
 
-function getChunksFromScrollerState(scrollTop: number, offsetHeight: number, chunkSize: number): [number, number] {
+export function getChunksFromScrollerState(
+  scrollTop: number,
+  offsetHeight: number,
+  chunkSize: number
+): [number, number] {
   const chunkStart = Math.floor(scrollTop / chunkSize) - 1;
   const chunkEnd = Math.ceil((scrollTop + offsetHeight) / chunkSize) + 1;
   return [chunkStart, chunkEnd];
@@ -9,20 +13,24 @@ function getChunksFromScrollerState(scrollTop: number, offsetHeight: number, chu
 
 const DEFAULT_CHUNK_STATE = [0, 0];
 
-interface ChunkProps {
+export interface ScrollChunkProps {
   chunkSize: number;
   getScrollerState: () => ScrollerState;
   forceUpdate: () => void;
 }
 
-interface ChunkState {
+export interface ScrollChunkUseState {
   forceUpdateOnChunkChange: (fromDirtyType: 1 | 2) => void;
   chunkStart: number;
   chunkEnd: number;
-  dirty: boolean;
+  dirty: 0 | 1 | 2;
 }
 
-export default function useScrollChunkState({chunkSize, getScrollerState, forceUpdate}: ChunkProps) {
+export default function useScrollChunkState({
+  chunkSize,
+  getScrollerState,
+  forceUpdate,
+}: ScrollChunkProps): ScrollChunkUseState {
   const {dirty, scrollTop, offsetHeight} = getScrollerState();
   useLayoutEffect(() => void (dirty && forceUpdate()), [dirty, forceUpdate]);
   const chunkState = useRef(DEFAULT_CHUNK_STATE);

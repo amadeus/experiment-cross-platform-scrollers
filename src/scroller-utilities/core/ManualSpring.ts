@@ -1,5 +1,7 @@
-interface ManualSpringProps {
-  callback: Callback;
+export type ManualSpringCallback = (currentValue: number, abort: () => void) => void;
+
+export interface ManualSpringProps {
+  callback: ManualSpringCallback;
   tension?: number;
   friction?: number;
   mass?: number;
@@ -8,16 +10,14 @@ interface ManualSpringProps {
   clamp?: boolean;
 }
 
-interface ToProps {
+export interface ManualSpringToProps {
   to: number;
   from?: number;
   animate?: boolean;
   callback?: () => void;
 }
 
-type Callback = (currentValue: number, abort: () => void) => void;
-
-type AnimationCallback = () => any;
+export type ManualSpringRestCallback = () => unknown;
 
 // Physics are being calculated at 240 times a second - which will mean
 // probably almost never needing to do multiple frames of interpolation
@@ -31,7 +31,7 @@ export default class ManualSpring {
   private maxVelocity: number;
   private clamp: boolean;
 
-  private callback: Callback;
+  private callback: ManualSpringCallback;
 
   private accumulator: number = 0;
   private from: number = 0;
@@ -42,7 +42,7 @@ export default class ManualSpring {
   private last: number | null = null;
   private nextTick: number = -1;
 
-  private callbacks: AnimationCallback[] = [];
+  private callbacks: ManualSpringRestCallback[] = [];
 
   constructor({
     callback,
@@ -63,7 +63,7 @@ export default class ManualSpring {
     this.clamp = clamp;
   }
 
-  to({to, from, animate = false, callback}: ToProps) {
+  to({to, from, animate = false, callback}: ManualSpringToProps) {
     this.target = to;
     if (callback != null) {
       this.callbacks.push(callback);

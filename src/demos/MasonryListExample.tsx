@@ -4,7 +4,8 @@ import createMasonryListScroller from '../factories/createMasonryListScroller';
 import useIsScrolling from './useIsScrolling';
 import styles from './Demo.module.css';
 import scrollbarStyles from './Scrollbars.module.css';
-import type {UnitCoords, RenderSection as RenderMasonrySection} from '../factories/createMasonryListScroller';
+import type {RenderSection as RenderMasonrySection} from '../factories/createMasonryListScroller';
+import type {MasonryListUnitCoords} from '../scroller-utilities';
 
 const MasonryListScrollers = Object.freeze({
   [ScrollbarSizes.NONE]: createMasonryListScroller(scrollbarStyles.noneBase),
@@ -67,7 +68,7 @@ export default memo(({size, dir, chunkSize}: MasonryListExampleProps) => {
   const {sections, catSections, getItemKey, getItemHeight, getSectionHeight} = useCatState();
   const [isScrolling, handleScroll] = useIsScrolling();
   const renderMasonrySection: RenderMasonrySection = useCallback(
-    (section: number, coords: UnitCoords, sectionKey: string) => {
+    (section: number, coords: MasonryListUnitCoords, sectionKey: string) => {
       return section === catSections.length ? (
         <div style={coords} key={sectionKey} className={styles.masonryFooter}>
           <strong>THIS IS AN EXAMPLE FOOTER</strong>
@@ -82,7 +83,7 @@ export default memo(({size, dir, chunkSize}: MasonryListExampleProps) => {
     [catSections]
   );
   const renderMasonryItem = useCallback(
-    (section: number, item: number, coords: UnitCoords, itemKey: string) => {
+    (section: number, item: number, coords: MasonryListUnitCoords, itemKey: string) => {
       const cat = catSections[section][item];
       return cat != null ? (
         <img src={cat.src} key={itemKey} style={coords} className={styles.masonryImage} alt="" />

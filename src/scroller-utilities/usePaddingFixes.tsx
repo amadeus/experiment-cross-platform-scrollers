@@ -1,6 +1,6 @@
 import React, {useRef, useLayoutEffect, useMemo} from 'react';
-import type {ScrollerSpecs} from '../core/getScrollbarSpecs';
-import type {OrientationTypes} from '../core/SharedTypes';
+import type {ScrollbarSpecs} from './core/getScrollbarSpecs';
+import type {ScrollerOrientationTypes} from './core/SharedTypes';
 
 const DEFAULT_STYLES = Object.freeze({
   pointerEvents: 'none',
@@ -9,13 +9,13 @@ const DEFAULT_STYLES = Object.freeze({
   flex: '0 0 auto',
 } as const);
 
-interface PaddingFixProps {
+export interface PaddingFixProps {
   paddingFix?: boolean;
-  orientation: OrientationTypes;
+  orientation: ScrollerOrientationTypes;
   dir: 'ltr' | 'rtl';
   className: string | null | undefined;
   scrollerRef: React.RefObject<HTMLDivElement>;
-  specs: ScrollerSpecs;
+  specs: ScrollbarSpecs;
 }
 
 // This is the hook implementation for the specs we got from getScrollbarSpecs
@@ -33,7 +33,7 @@ export default function usePaddingFixes({
   className,
   scrollerRef,
   specs,
-}: PaddingFixProps) {
+}: PaddingFixProps): React.ReactNode {
   const spacingRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const {current: scrollerNode} = scrollerRef;

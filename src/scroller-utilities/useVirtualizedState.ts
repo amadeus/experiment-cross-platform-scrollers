@@ -1,31 +1,9 @@
 import {useState, useRef, useMemo} from 'react';
-import ListComputer from '../core/ListComputer';
+import ListComputer from './core/ListComputer';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import type {ScrollerState} from '../core/SharedTypes';
-import type {
-  SectionHeight,
-  RowHeight,
-  FooterHeight,
-  ListState,
-  ListItem,
-  ListItemSection,
-  ListItemRow,
-  ListItemFooter,
-} from '../core/ListComputer';
-
-export type {SectionHeight, RowHeight, FooterHeight, ListState, ListItem, ListItemSection, ListItemRow, ListItemFooter};
-
-interface VirtualizedStateProps {
-  sections: number[];
-  sectionHeight: SectionHeight;
-  rowHeight: RowHeight;
-  footerHeight: FooterHeight;
-  chunkSize: number | undefined;
-  paddingTop: number | undefined;
-  paddingBottom: number | undefined;
-  getScrollerState: () => ScrollerState;
-}
+import type {ScrollerState} from './core/SharedTypes';
+import type {ListSectionHeight, ListRowHeight, ListFooterHeight, ListState} from './core/ListComputer';
 
 const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   spacerTop: 0,
@@ -33,7 +11,18 @@ const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   items: [],
 });
 
-interface VirtualizedState extends ListState {
+export interface VirtualizedStateProps {
+  sections: number[];
+  sectionHeight: ListSectionHeight;
+  rowHeight: ListRowHeight;
+  footerHeight: ListFooterHeight;
+  chunkSize: number | undefined;
+  paddingTop: number | undefined;
+  paddingBottom: number | undefined;
+  getScrollerState: () => ScrollerState;
+}
+
+export interface VirtualizedUseState extends ListState {
   listComputer: ListComputer;
   forceUpdateOnChunkChange: (fromDirtyType: 1 | 2) => void;
 }
@@ -51,7 +40,7 @@ export default function useVirtualizedState({
   paddingTop = 0,
   paddingBottom = 0,
   getScrollerState,
-}: VirtualizedStateProps): VirtualizedState {
+}: VirtualizedStateProps): VirtualizedUseState {
   if (process.env.NODE_ENV === 'development' && chunkSize === 0) {
     throw new Error('createListScroller: chunkSize must be greater than 0');
   }

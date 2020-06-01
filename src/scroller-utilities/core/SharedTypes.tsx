@@ -1,11 +1,10 @@
 import type React from 'react';
 
-export type UpdateCallback = () => void;
 export type ScrollEvent = React.UIEvent<HTMLDivElement, UIEvent>;
 export type ScrollHandler = (event: ScrollEvent) => void;
-export type OrientationTypes = 'vertical' | 'horizontal' | 'auto';
+export type ScrollerOrientationTypes = 'vertical' | 'horizontal' | 'auto';
 
-export interface ScrollerBaseProps
+export interface ScrollerComponentBaseProps
   extends React.PropsWithoutRef<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {
   // className?: string | null | undefined;
   dir?: 'rtl' | 'ltr';
@@ -26,9 +25,4 @@ export interface ScrollerState {
   // dirty state to 1, resize events will set the dirty state to 2.  Dirty can
   // only ever go from 1|2->0 or 1->2, but never 2->1
   dirty: 0 | 1 | 2;
-}
-
-export interface ScrollToAPI {
-  animate?: boolean;
-  callback?: () => void | undefined;
 }

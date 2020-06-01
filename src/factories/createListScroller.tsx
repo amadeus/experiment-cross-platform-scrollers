@@ -1,22 +1,29 @@
 import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect} from 'react';
-import useResizeObserverSubscription from '../hooks/useResizeObserverSubscription';
-import useVirtualizedState from '../hooks/useVirtualizedState';
-import useAnimatedListScroll from '../hooks/useAnimatedListScroll';
-import useCachedScrollerState from '../hooks/useCachedScrollerState';
-import usePaddingFixes from '../hooks/usePaddingFixes';
-import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
-import type {ScrollToProps, ScrollIntoViewProps, ScrollToIndexProps} from '../hooks/useAnimatedListScroll';
+import {
+  useResizeObserverSubscription,
+  useVirtualizedState,
+  useAnimatedListScroll,
+  useCachedScrollerState,
+  usePaddingFixes,
+  getScrollbarSpecs,
+  getMergedOrientationStyles,
+} from '../scroller-utilities';
 import type {
-  SectionHeight,
-  RowHeight,
-  FooterHeight,
+  ScrollToProps,
+  ScrollIntoViewProps,
+  ScrollToIndexProps,
+  ListSectionHeight,
+  ListRowHeight,
+  ListFooterHeight,
   ListItem,
   ListItemSection,
   ListItemRow,
   ListItemFooter,
-} from '../hooks/useVirtualizedState';
-import type {ScrollEvent, ScrollerState, UpdateCallback, ScrollerBaseProps} from '../core/SharedTypes';
+  ScrollEvent,
+  ScrollerState,
+  ResizeObserverUpdateCallback,
+  ScrollerComponentBaseProps,
+} from '../scroller-utilities';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
 // with a List component is that it can be rendering a tremendous amount of
@@ -29,7 +36,7 @@ export type RenderRowFunction = (item: ListItemRow) => React.ReactNode;
 export type RenderFooterFunction = (item: ListItemFooter) => React.ReactNode;
 export type RenderWrapperFunction = (section: number, children: React.ReactNode) => React.ReactNode;
 
-export interface ListScrollerProps extends ScrollerBaseProps {
+export interface ListScrollerProps extends ScrollerComponentBaseProps {
   // NOTE(amadeus): We should probably not have this API if not really needed?
   // onScrollerStateUpdate?: () => any;
 
@@ -39,9 +46,9 @@ export interface ListScrollerProps extends ScrollerBaseProps {
   renderFooter?: RenderFooterFunction;
   wrapSection?: RenderWrapperFunction;
 
-  sectionHeight: SectionHeight;
-  rowHeight: RowHeight;
-  footerHeight?: FooterHeight;
+  sectionHeight: ListSectionHeight;
+  rowHeight: ListRowHeight;
+  footerHeight?: ListFooterHeight;
   // NOTE(amadeus): We could potentially assume a function for height
   // calculation is not uniform, but if it's just a number, than it's uniform
   // uniform?: boolean;
@@ -155,7 +162,7 @@ function renderListItems({
 
 export default function createListScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
-  const listenerMap = new Map<Element, UpdateCallback>();
+  const listenerMap = new Map<Element, ResizeObserverUpdateCallback>();
   const resizeObserver =
     ResizeObserver != null
       ? new ResizeObserver((entries) => {

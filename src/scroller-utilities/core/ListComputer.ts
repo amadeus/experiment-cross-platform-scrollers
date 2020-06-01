@@ -1,6 +1,6 @@
-export type SectionHeight = number | ((section: number) => number);
-export type RowHeight = number | ((section: number, row: number) => number);
-export type FooterHeight = number | ((section: number) => number);
+export type ListSectionHeight = number | ((section: number) => number);
+export type ListRowHeight = number | ((section: number, row: number) => number);
+export type ListFooterHeight = number | ((section: number) => number);
 
 export type ListItemSection = {
   type: 'section';
@@ -29,19 +29,19 @@ export interface ListState {
   items: ListItem[];
 }
 
-interface ListComputerProps {
-  sectionHeight: SectionHeight;
-  rowHeight: RowHeight;
-  footerHeight?: FooterHeight;
+export interface ListComputerProps {
+  sectionHeight: ListSectionHeight;
+  rowHeight: ListRowHeight;
+  footerHeight?: ListFooterHeight;
   paddingTop: number;
   paddingBottom: number;
   sections: number[];
 }
 
 class ListComputer {
-  sectionHeight: SectionHeight = 0;
-  rowHeight: RowHeight = 0;
-  footerHeight: FooterHeight | undefined = 0;
+  sectionHeight: ListSectionHeight = 0;
+  rowHeight: ListRowHeight = 0;
+  footerHeight: ListFooterHeight | undefined = 0;
   uniform: boolean = true;
   paddingBottom: number = 0;
   paddingTop: number = 0;

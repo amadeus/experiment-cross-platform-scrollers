@@ -1,6 +1,6 @@
 type StyleKeys = 'position' | 'top' | 'left' | 'width' | 'height' | 'overflow';
 
-export interface ScrollerSpecs {
+export interface ScrollbarSpecs {
   width: number;
   height: number;
 }
@@ -34,7 +34,7 @@ const InnerStyles: [StyleKeys, string][] = [
 // we are applying, so then we can manually fix padding on the side of the
 // scrollbar.  This function essentially creates a hidden element and measures
 // the values of the vertical and horizontal scrollbars
-export default function getScrollbarSpecs(className: string = ''): ScrollerSpecs {
+export default function getScrollbarSpecs(className: string = ''): ScrollbarSpecs {
   const outerEl: HTMLDivElement = document.createElement('div');
   const innerEl: HTMLDivElement = document.createElement('div');
   for (const [key, value] of OuterStyles) {

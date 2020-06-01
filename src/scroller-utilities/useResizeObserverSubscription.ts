@@ -1,11 +1,12 @@
 import {useLayoutEffect} from 'react';
-import type {UpdateCallback} from '../core/SharedTypes';
 
-interface ResizeObserverSubscriptionProps {
+export type ResizeObserverUpdateCallback = () => void;
+
+export interface ResizeObserverSubscriptionProps {
   ref: React.RefObject<HTMLElement>;
-  onUpdate: UpdateCallback;
+  onUpdate: ResizeObserverUpdateCallback;
   resizeObserver: ResizeObserver | null;
-  listenerMap: Map<Element, UpdateCallback>;
+  listenerMap: Map<Element, ResizeObserverUpdateCallback>;
 }
 
 export default function useResizeObserverSubscription({

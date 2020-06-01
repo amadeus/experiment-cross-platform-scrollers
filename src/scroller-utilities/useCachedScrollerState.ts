@@ -1,5 +1,5 @@
 import {useCallback, useRef} from 'react';
-import type {ScrollerState} from '../core/SharedTypes';
+import type {ScrollerState} from './core/SharedTypes';
 
 const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
   scrollTop: 0,
@@ -11,7 +11,13 @@ const INITIAL_SCROLLER_STATE: ScrollerState = Object.freeze({
   dirty: 2,
 });
 
-export default function useCachedScrollerState() {
+export interface CachedScrollerUseState {
+  scrollerRef: React.RefObject<HTMLDivElement>;
+  scrollerState: React.MutableRefObject<ScrollerState>;
+  getScrollerState: () => ScrollerState;
+}
+
+export default function useCachedScrollerState(): CachedScrollerUseState {
   // Ref for the dom element to track the scroller state
   const scrollerRef = useRef<HTMLDivElement>(null);
   // Ref cache for the scoller state itself

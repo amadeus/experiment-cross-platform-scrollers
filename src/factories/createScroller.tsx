@@ -1,11 +1,18 @@
 import React, {useImperativeHandle, forwardRef} from 'react';
-import usePaddingFixes from '../hooks/usePaddingFixes';
-import useAnimatedScroll from '../hooks/useAnimatedScroll';
-import getScrollbarSpecs from '../core/getScrollbarSpecs';
-import getMergedOrientationStyles from '../core/getMergedOrientationStyles';
-import type {ScrollerBaseProps, ScrollerState, OrientationTypes} from '../core/SharedTypes';
-import type {ScrollIntoViewProps, ScrollToProps} from '../hooks/useAnimatedScroll';
-import useUncachedScrollerState from '../hooks/useUncachedScrollerState';
+import {
+  usePaddingFixes,
+  useAnimatedScroll,
+  getScrollbarSpecs,
+  getMergedOrientationStyles,
+  useUncachedScrollerState,
+} from '../scroller-utilities';
+import type {
+  ScrollerComponentBaseProps,
+  ScrollerState,
+  ScrollerOrientationTypes,
+  ScrollIntoViewProps,
+  ScrollToProps,
+} from '../scroller-utilities';
 
 // Your basic Scroller component.  It's flexible in that it can have state
 // queried and scroll positions set as needed.  It also includes the basic
@@ -18,8 +25,8 @@ export interface ScrollerRef {
   scrollIntoView: (props: ScrollIntoViewProps) => void;
 }
 
-export interface ScrollerProps extends ScrollerBaseProps {
-  orientation?: OrientationTypes;
+export interface ScrollerProps extends ScrollerComponentBaseProps {
+  orientation?: ScrollerOrientationTypes;
   children: React.ReactNode;
 }
 

@@ -1,6 +1,11 @@
 import {useState, useCallback} from 'react';
-import ManualSpring from '../core/ManualSpring';
-import type {ScrollerState, ScrollToAPI} from '../core/SharedTypes';
+import ManualSpring from './core/ManualSpring';
+import type {ScrollerState} from './core/SharedTypes';
+
+export interface ScrollToAPI {
+  animate?: boolean;
+  callback?: () => void | undefined;
+}
 
 export interface ScrollToProps extends ScrollToAPI {
   to: number;
@@ -12,13 +17,18 @@ export interface ScrollIntoViewProps extends ScrollToAPI {
   padding?: number;
 }
 
+export interface AnimatedScrollUseState {
+  spring: ManualSpring;
+  scrollTo: (props: ScrollToProps) => void;
+  scrollIntoView: (props: ScrollIntoViewProps) => void;
+}
+
 // Using the ManualSpring API, setup various functions that can be used to set
 // scroll position, but animated and immediately
-
 export default function useAnimatedScroll(
   nodeRef: React.RefObject<HTMLElement>,
   getScrollerState: () => ScrollerState
-) {
+): AnimatedScrollUseState {
   const [spring] = useState(
     () =>
       new ManualSpring({

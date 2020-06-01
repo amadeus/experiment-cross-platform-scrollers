@@ -1,10 +1,8 @@
 import {useCallback} from 'react';
 import useAnimatedScroll from './useAnimatedScroll';
-import type ListComputer from '../core/ListComputer';
-import type {ScrollerState, ScrollToAPI} from '../core/SharedTypes';
-import type {ScrollToProps, ScrollIntoViewProps} from './useAnimatedScroll';
-
-export type {ScrollToProps, ScrollIntoViewProps};
+import type ListComputer from './core/ListComputer';
+import type {ScrollerState} from './core/SharedTypes';
+import type {AnimatedScrollUseState, ScrollToAPI} from './useAnimatedScroll';
 
 export interface ScrollToIndexProps extends ScrollToAPI {
   section: number;
@@ -12,14 +10,19 @@ export interface ScrollToIndexProps extends ScrollToAPI {
   padding?: number;
 }
 
+export interface AnimatedListScrollUseState extends AnimatedScrollUseState {
+  scrollToIndex: (props: ScrollToIndexProps) => void;
+  isItemVisible: (section: number, row?: number | undefined, completely?: boolean) => boolean;
+  getScrollPosition: (section: number, row?: number | undefined) => [number, number];
+}
+
 // Takes the base `useAnimatedScroll` API and adds an additional method to
 // scroll certain section/row indexes into view
-
 export default function useAnimatedListScroll(
   nodeRef: React.RefObject<HTMLElement>,
   getScrollerState: () => ScrollerState,
   listComputer: ListComputer
-) {
+): AnimatedListScrollUseState {
   const {scrollTo, spring, scrollIntoView} = useAnimatedScroll(nodeRef, getScrollerState);
   const getScrollPosition = useCallback(
     (section: number, row?: number | undefined): [number, number] => {
