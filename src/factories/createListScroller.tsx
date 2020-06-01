@@ -88,8 +88,6 @@ export interface ListScrollerRef {
   getSectionRowFromIndex: (index: number) => [number, number];
 }
 
-const {ResizeObserver} = window;
-
 // NOTE(amadeus): Can we deprecate this?
 function useGetItems(items: ListItem[]) {
   const itemsRef = useRef(items);
@@ -160,18 +158,18 @@ function renderListItems({
   return content;
 }
 
-export default function createListScroller(scrollbarClassName?: string) {
+export default function createListScroller(
+  scrollbarClassName: string | undefined,
+  ResizeObserverClass: typeof ResizeObserver
+) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, ResizeObserverUpdateCallback>();
-  const resizeObserver =
-    ResizeObserver != null
-      ? new ResizeObserver((entries) => {
-          entries.forEach(({target}) => {
-            const onUpdate = listenerMap.get(target);
-            onUpdate != null && onUpdate();
-          });
-        })
-      : null;
+  const resizeObserver = new ResizeObserverClass((entries) => {
+    entries.forEach(({target}) => {
+      const onUpdate = listenerMap.get(target);
+      onUpdate != null && onUpdate();
+    });
+  });
   return forwardRef<ListScrollerRef, ListScrollerProps>(function ListScroller(
     {
       className,

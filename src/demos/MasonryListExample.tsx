@@ -8,9 +8,9 @@ import type {RenderSection as RenderMasonrySection} from '../factories/createMas
 import type {MasonryListUnitCoords} from '../scroller-utilities';
 
 const MasonryListScrollers = Object.freeze({
-  [ScrollbarSizes.NONE]: createMasonryListScroller(scrollbarStyles.noneBase),
-  [ScrollbarSizes.THIN]: createMasonryListScroller(scrollbarStyles.thinBase),
-  [ScrollbarSizes.AUTO]: createMasonryListScroller(scrollbarStyles.autoBase),
+  [ScrollbarSizes.NONE]: createMasonryListScroller(scrollbarStyles.noneBase, ResizeObserver),
+  [ScrollbarSizes.THIN]: createMasonryListScroller(scrollbarStyles.thinBase, ResizeObserver),
+  [ScrollbarSizes.AUTO]: createMasonryListScroller(scrollbarStyles.autoBase, ResizeObserver),
 });
 
 type Cat = {

@@ -13,7 +13,11 @@ export {default as usePaddingFixes} from './usePaddingFixes';
 export type {PaddingFixProps} from './usePaddingFixes';
 
 export {default as useResizeObserverSubscription} from './useResizeObserverSubscription';
-export type {ResizeObserverSubscriptionProps, ResizeObserverUpdateCallback} from './useResizeObserverSubscription';
+export type {
+  ResizeObserverInterface,
+  ResizeObserverSubscriptionProps,
+  ResizeObserverUpdateCallback,
+} from './useResizeObserverSubscription';
 
 export {default as useScrollChunkState, getChunksFromScrollerState} from './useScrollChunkState';
 export type {ScrollChunkProps, ScrollChunkUseState} from './useScrollChunkState';

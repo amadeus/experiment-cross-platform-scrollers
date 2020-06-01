@@ -12,9 +12,9 @@ import type {
 } from '../factories/createListScroller';
 
 const ListScrollers = Object.freeze({
-  [ScrollbarSizes.NONE]: createListScroller(scrollbarStyles.noneBase),
-  [ScrollbarSizes.THIN]: createListScroller(scrollbarStyles.thinBase),
-  [ScrollbarSizes.AUTO]: createListScroller(scrollbarStyles.autoBase),
+  [ScrollbarSizes.NONE]: createListScroller(scrollbarStyles.noneBase, ResizeObserver),
+  [ScrollbarSizes.THIN]: createListScroller(scrollbarStyles.thinBase, ResizeObserver),
+  [ScrollbarSizes.AUTO]: createListScroller(scrollbarStyles.autoBase, ResizeObserver),
 });
 
 const LIST_SECTIONS = [10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92, 10, 3, 30, 10, 42, 92];

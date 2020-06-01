@@ -60,18 +60,18 @@ export interface MasonryListScrollerProps extends ScrollerComponentBaseProps {
   chunkSize?: number;
 }
 
-export default function createMasonryListScroller(scrollbarClassName?: string) {
+export default function createMasonryListScroller(
+  scrollbarClassName: string | undefined,
+  ResizeObserverClass: typeof ResizeObserver
+) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, ResizeObserverUpdateCallback>();
-  const resizeObserver =
-    ResizeObserver != null
-      ? new ResizeObserver((entries) => {
-          entries.forEach(({target}) => {
-            const onUpdate = listenerMap.get(target);
-            onUpdate != null && onUpdate();
-          });
-        })
-      : null;
+  const resizeObserver = new ResizeObserverClass((entries) => {
+    entries.forEach(({target}) => {
+      const onUpdate = listenerMap.get(target);
+      onUpdate != null && onUpdate();
+    });
+  });
   return forwardRef<MasonryListScrollerRef, MasonryListScrollerProps>(function MasonryListScroller(
     {
       onScroll,
