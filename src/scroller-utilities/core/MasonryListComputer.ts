@@ -138,7 +138,7 @@ export default class MasonryListComputer {
     while (section < this.sections.length) {
       const items = this.sections[section];
       let item = 0;
-      let sectionHeight = getSectionHeight(section);
+      const sectionHeight = getSectionHeight(section);
       let sectionTop = this.getMaxColumnHeight(this.columnHeights);
       if (section > 0) {
         sectionTop = sectionTop - itemGutter + this.getSectionGutter();

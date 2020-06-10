@@ -1,6 +1,7 @@
 import React, {useRef, useLayoutEffect, useMemo} from 'react';
-import type {ScrollbarSpecs} from './core/getScrollbarSpecs';
+
 import type {ScrollerOrientationTypes} from './core/SharedTypes';
+import type {ScrollbarSpecs} from './core/getScrollbarSpecs';
 
 const DEFAULT_STYLES = Object.freeze({
   pointerEvents: 'none',
@@ -40,7 +41,11 @@ export default function usePaddingFixes({
     if (scrollerNode == null || orientation === 'auto' || !paddingFix) {
       return;
     }
-    const computedStyle = window.getComputedStyle(scrollerNode);
+    const nodeWindow = scrollerNode.ownerDocument?.defaultView;
+    if (nodeWindow == null) {
+      return;
+    }
+    const computedStyle = nodeWindow.getComputedStyle(scrollerNode);
     if (orientation === 'vertical') {
       if (dir === 'rtl') {
         const paddingLeft = parseInt(computedStyle.getPropertyValue('padding-left'), 10);

@@ -1,8 +1,13 @@
-export {default as useAnimatedScroll} from './useAnimatedScroll';
-export type {ScrollToProps, ScrollIntoViewProps, AnimatedScrollUseState, ScrollToAPI} from './useAnimatedScroll';
+export {default as getAnimatedScrollHelpers} from './core/getAnimatedScrollHelpers';
+export type {
+  ScrollToProps,
+  ScrollIntoViewProps,
+  AnimatedScrollHelperState,
+  ScrollToAPI,
+} from './core/getAnimatedScrollHelpers';
 
-export {default as useAnimatedListScroll} from './useAnimatedListScroll';
-export type {ScrollToIndexProps, AnimatedListScrollUseState} from './useAnimatedListScroll';
+export {default as getAnimatedListScrollHelpers} from './core/getAnimatedListScrollHelpers';
+export type {ScrollToIndexProps, AnimatedListScrollHelperState} from './core/getAnimatedListScrollHelpers';
 
 export {default as useCachedScrollerState} from './useCachedScrollerState';
 export type {CachedScrollerUseState} from './useCachedScrollerState';

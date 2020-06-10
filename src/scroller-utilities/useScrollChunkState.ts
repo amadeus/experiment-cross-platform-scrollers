@@ -1,4 +1,5 @@
 import {useRef, useCallback, useLayoutEffect} from 'react';
+
 import type {ScrollerState} from './core/SharedTypes';
 
 export function getChunksFromScrollerState(

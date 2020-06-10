@@ -1,4 +1,5 @@
 import {useCallback, useRef} from 'react';
+
 import type {ScrollerState} from './core/SharedTypes';
 
 const DEFAULT_STATE: ScrollerState = Object.freeze({

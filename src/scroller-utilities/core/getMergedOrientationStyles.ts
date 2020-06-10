@@ -1,5 +1,5 @@
-import type React from 'react';
 import type {ScrollerOrientationTypes} from './SharedTypes';
+import type React from 'react';
 
 export const STYLES_VERTICAL = Object.freeze({
   overflowY: 'scroll',

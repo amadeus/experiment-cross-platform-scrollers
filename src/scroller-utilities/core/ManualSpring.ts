@@ -8,6 +8,7 @@ export interface ManualSpringProps {
   threshold?: number;
   maxVelocity?: number;
   clamp?: boolean;
+  getNodeWindow?: () => Window | null;
 }
 
 export interface ManualSpringToProps {
@@ -41,6 +42,8 @@ export default class ManualSpring {
   animating: boolean = false;
   private last: number | null = null;
   private nextTick: number = -1;
+  private getNodeWindow: () => Window | null;
+  private nodeWindow: Window | null = null;
 
   private callbacks: ManualSpringRestCallback[] = [];
 
@@ -52,6 +55,7 @@ export default class ManualSpring {
     threshold = 0.001,
     clamp = false,
     maxVelocity = Infinity,
+    getNodeWindow = () => window,
   }: ManualSpringProps) {
     this.callback = callback;
     this.from = 0;
@@ -61,6 +65,7 @@ export default class ManualSpring {
     this.maxVelocity = maxVelocity;
     this.threshold = threshold;
     this.clamp = clamp;
+    this.getNodeWindow = getNodeWindow;
   }
 
   to({to, from, animate = false, callback}: ManualSpringToProps) {
@@ -99,7 +104,8 @@ export default class ManualSpring {
     this.animating = true;
     this.vel = 0;
     this.last = null;
-    this.nextTick = window.requestAnimationFrame(this.update);
+    this.nodeWindow = this.getNodeWindow();
+    this.nextTick = this.nodeWindow?.requestAnimationFrame(this.update) || -1;
   }
 
   private getUpdates(vel: number, from: number) {
@@ -118,7 +124,7 @@ export default class ManualSpring {
   private update = (timestamp: number) => {
     if (!this.last) {
       this.last = timestamp;
-      this.nextTick = window.requestAnimationFrame(this.update);
+      this.nextTick = this.nodeWindow?.requestAnimationFrame(this.update) || -1;
       return;
     }
 
@@ -140,14 +146,10 @@ export default class ManualSpring {
           (from < this.target && this.from > this.target) ||
           (from > this.target && this.from < this.target))
       ) {
-        // NOTE(amadeus): Remove this when integrating
-        console.log('stopping due to clamp');
         this.stop(this.target);
         return;
       }
       if (Math.abs(accel * FRAME) < this.threshold) {
-        // NOTE(amadeus): Remove this when integrating
-        console.log('stopping due to threshold');
         this.stop(this.target);
         return;
       }
@@ -164,12 +166,12 @@ export default class ManualSpring {
     this.callback(from, this.abort);
     if (this.animating) {
       this.last = now;
-      this.nextTick = window.requestAnimationFrame(this.update);
+      this.nextTick = this.nodeWindow?.requestAnimationFrame(this.update) || -1;
     }
   };
 
   private stop(value: number) {
-    window.cancelAnimationFrame(this.nextTick);
+    this.nodeWindow?.cancelAnimationFrame(this.nextTick);
     this.animating = false;
     this.accumulator = 0;
     if (value != null) {

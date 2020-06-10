@@ -1,12 +1,11 @@
 import type React from 'react';
 
-export type ScrollEvent = React.UIEvent<HTMLDivElement, UIEvent>;
+export type ScrollEvent = React.UIEvent<HTMLDivElement>;
 export type ScrollHandler = (event: ScrollEvent) => void;
 export type ScrollerOrientationTypes = 'vertical' | 'horizontal' | 'auto';
 
 export interface ScrollerComponentBaseProps
   extends React.PropsWithoutRef<React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>> {
-  // className?: string | null | undefined;
   dir?: 'rtl' | 'ltr';
   paddingFix?: boolean;
 }

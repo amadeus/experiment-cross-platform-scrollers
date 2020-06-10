@@ -1,9 +1,11 @@
 import {useState, useRef, useMemo} from 'react';
+
 import ListComputer from './core/ListComputer';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import type {ScrollerState} from './core/SharedTypes';
+
 import type {ListSectionHeight, ListRowHeight, ListFooterHeight, ListState} from './core/ListComputer';
+import type {ScrollerState} from './core/SharedTypes';
 
 const DEFAULT_ITEM_STATE: ListState = Object.freeze({
   spacerTop: 0,

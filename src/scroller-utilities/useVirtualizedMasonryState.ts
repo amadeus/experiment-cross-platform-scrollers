@@ -1,14 +1,16 @@
 import {useRef, useState, useMemo} from 'react';
+
+import MasonryListComputer from './core/MasonryListComputer';
 import useForceUpdate from './useForceUpdate';
 import useScrollChunkState from './useScrollChunkState';
-import MasonryListComputer from './core/MasonryListComputer';
-import type {ScrollerState} from './core/SharedTypes';
+
 import type {
   MasonryListGetItemKey,
   MasonryListGetSectionHeight,
   MasonryListGetItemHeight,
   MasonryListComputerState,
 } from './core/MasonryListComputer';
+import type {ScrollerState} from './core/SharedTypes';
 
 const DEFAULT_ITEM_STATE: MasonryListComputerState = Object.freeze({
   coordsMap: {},
