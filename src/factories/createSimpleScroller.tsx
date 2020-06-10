@@ -14,7 +14,7 @@ export interface SimpleScrollerProps extends ScrollerComponentBaseProps {
 
 export default function createSimpleScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
-  return function CSSScroller({
+  return function SimpleScroller({
     children,
     className,
     dir = 'ltr',

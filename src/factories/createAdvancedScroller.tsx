@@ -25,7 +25,7 @@ export interface AdvancedScrollerProps extends ScrollerComponentBaseProps {
 
 export default function createAdvancedScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
-  return forwardRef(function Scroller(
+  return forwardRef(function AdvancedScroller(
     {
       children,
       className,
