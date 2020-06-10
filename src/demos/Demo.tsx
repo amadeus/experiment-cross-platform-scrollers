@@ -6,14 +6,14 @@ import {ScrollbarSizes} from './Constants';
 import styles from './Demo.module.css';
 
 enum ScrollerTypes {
-  BASIC = 'BASIC',
+  ADVANCED = 'ADVANCED',
   LIST = 'LIST',
   MASONRY = 'MASONRY',
 }
 
 type ScrollTypeState = [ScrollerTypes, (event: React.ChangeEvent<HTMLSelectElement>) => void, React.ReactNode];
 function useScrollerType(): ScrollTypeState {
-  const [type, setType] = useState<ScrollerTypes>(ScrollerTypes.BASIC);
+  const [type, setType] = useState<ScrollerTypes>(ScrollerTypes.ADVANCED);
   const children = useMemo(
     () =>
       Object.keys(ScrollerTypes).map((type) => (
@@ -25,7 +25,7 @@ function useScrollerType(): ScrollTypeState {
   );
   const handleChange = useCallback(({currentTarget: {value}}: React.ChangeEvent<HTMLSelectElement>) => {
     switch (value) {
-      case ScrollerTypes.BASIC:
+      case ScrollerTypes.ADVANCED:
       case ScrollerTypes.LIST:
       case ScrollerTypes.MASONRY:
         setType(value);
@@ -107,7 +107,7 @@ export default function App() {
     case ScrollerTypes.MASONRY:
       Scroller = MasonryListExample;
       break;
-    case ScrollerTypes.BASIC:
+    case ScrollerTypes.ADVANCED:
     default:
       disableChunk = true;
       Scroller = ScrollerExample;
