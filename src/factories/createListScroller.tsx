@@ -1,8 +1,9 @@
-import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect} from 'react';
+import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect, useState} from 'react';
 import {
   useResizeObserverSubscription,
   useVirtualizedState,
-  useAnimatedListScroll,
+  ManualSpring,
+  getAnimatedListScrollHelpers,
   useCachedScrollerState,
   usePaddingFixes,
   getScrollbarSpecs,
@@ -23,6 +24,7 @@ import type {
   ScrollerState,
   ResizeObserverUpdateCallback,
   ScrollerComponentBaseProps,
+  AnimatedListScrollHelperState,
 } from '../scroller-utilities';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
@@ -76,7 +78,7 @@ export interface ListScrollerProps extends ScrollerComponentBaseProps {
   // children?: React.ReactNode;
 }
 
-export interface ListScrollerRef {
+export interface ListScrollerRef extends AnimatedListScrollHelperState {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerState;
   scrollTo: (props: ScrollToProps) => void;
@@ -208,10 +210,25 @@ export default function createListScroller(
       chunkSize,
       getScrollerState,
     });
-    const {scrollTo, scrollToIndex, scrollIntoView, isItemVisible, getScrollPosition} = useAnimatedListScroll(
-      scrollerRef,
-      getScrollerState,
-      listComputer
+    const [spring] = useState(
+      () =>
+        new ManualSpring({
+          // Some decent settings for managing a range of scroll speeds
+          tension: 200,
+          friction: 35,
+          mass: 2,
+          clamp: true,
+          callback: (value: number, abort: () => void) => {
+            const {current} = scrollerRef;
+            if (current == null) return abort();
+            if (orientation === 'vertical') {
+              current.scrollTop = value;
+            } else {
+              current.scrollLeft = value;
+            }
+          },
+          getNodeWindow: () => scrollerRef.current?.ownerDocument?.defaultView || null,
+        })
     );
     const markStateDirty = useCallback(
       (dirtyType: 1 | 2 = 2) => {
@@ -233,26 +250,11 @@ export default function createListScroller(
           return scrollerRef.current;
         },
         getScrollerState,
-        scrollTo,
-        scrollIntoView,
-        scrollToIndex,
-        isItemVisible,
-        getScrollPosition,
-        // NOTE(amadeus): It would be nice to not surface this API :X
         getItems,
         getSectionRowFromIndex,
+        ...getAnimatedListScrollHelpers(scrollerRef, getScrollerState, listComputer, spring),
       }),
-      [
-        scrollerRef,
-        getScrollerState,
-        scrollTo,
-        scrollToIndex,
-        scrollIntoView,
-        isItemVisible,
-        getScrollPosition,
-        getItems,
-        getSectionRowFromIndex,
-      ]
+      [scrollerRef, getScrollerState, getSectionRowFromIndex, getItems, listComputer, spring]
     );
     const handleScroll = useCallback(
       (event: ScrollEvent) => {

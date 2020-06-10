@@ -1,32 +1,25 @@
-import React, {useImperativeHandle, forwardRef} from 'react';
+import React, {useImperativeHandle, forwardRef, useState} from 'react';
 import {
   usePaddingFixes,
-  useAnimatedScroll,
+  ManualSpring,
   getScrollbarSpecs,
   getMergedOrientationStyles,
+  getAnimatedScrollHelpers,
   useUncachedScrollerState,
 } from '../scroller-utilities';
-import type {
-  ScrollerComponentBaseProps,
-  ScrollerState,
-  ScrollerOrientationTypes,
-  ScrollIntoViewProps,
-  ScrollToProps,
-} from '../scroller-utilities';
+import type {ScrollerComponentBaseProps, ScrollerState, AnimatedScrollHelperState} from '../scroller-utilities';
 
 // Your basic Scroller component.  It's flexible in that it can have state
 // queried and scroll positions set as needed.  It also includes the basic
 // padding fixes as needed.
 
-export interface ScrollerRef {
+export interface ScrollerRef extends AnimatedScrollHelperState {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerState;
-  scrollTo: (props: ScrollToProps) => void;
-  scrollIntoView: (props: ScrollIntoViewProps) => void;
 }
 
 export interface ScrollerProps extends ScrollerComponentBaseProps {
-  orientation?: ScrollerOrientationTypes;
+  orientation?: 'vertical' | 'horizontal';
   children: React.ReactNode;
 }
 
@@ -37,7 +30,26 @@ export default function createScroller(scrollbarClassName?: string) {
     ref: React.Ref<ScrollerRef>
   ) {
     const {scrollerRef, getScrollerState} = useUncachedScrollerState();
-    const {scrollTo, scrollIntoView} = useAnimatedScroll(scrollerRef, getScrollerState);
+    const [spring] = useState(
+      () =>
+        new ManualSpring({
+          // Some decent settings for managing a range of scroll speeds
+          tension: 200,
+          friction: 35,
+          mass: 2,
+          clamp: true,
+          callback: (value: number, abort: () => void) => {
+            const {current} = scrollerRef;
+            if (current == null) return abort();
+            if (orientation === 'vertical') {
+              current.scrollTop = value;
+            } else {
+              current.scrollLeft = value;
+            }
+          },
+          getNodeWindow: () => scrollerRef.current?.ownerDocument?.defaultView || null,
+        })
+    );
     useImperativeHandle<ScrollerRef, ScrollerRef>(
       ref,
       () => ({
@@ -45,10 +57,9 @@ export default function createScroller(scrollbarClassName?: string) {
           return scrollerRef.current;
         },
         getScrollerState,
-        scrollTo,
-        scrollIntoView,
+        ...getAnimatedScrollHelpers(scrollerRef, getScrollerState, spring, orientation),
       }),
-      [scrollerRef, getScrollerState, scrollTo, scrollIntoView]
+      [scrollerRef, getScrollerState, orientation, spring]
     );
     const paddingNode = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
     const classes = [scrollbarClassName, className].filter((str) => str != null);

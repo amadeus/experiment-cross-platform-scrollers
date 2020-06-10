@@ -1,7 +1,8 @@
-import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo} from 'react';
+import React, {forwardRef, useRef, useCallback, useImperativeHandle, useMemo, useState} from 'react';
 import {
   useResizeObserverSubscription,
-  useAnimatedScroll,
+  ManualSpring,
+  getAnimatedScrollHelpers,
   useVirtualizedMasonryState,
   getMasonryListSectionIndex,
   getMasonryListSectionHeaderKey,
@@ -15,19 +16,16 @@ import type {
   ResizeObserverUpdateCallback,
   ScrollerState,
   ScrollerComponentBaseProps,
-  ScrollToProps,
-  ScrollIntoViewProps,
   MasonryListGetItemKey,
   MasonryListGetSectionHeight,
   MasonryListGetItemHeight,
   MasonryListUnitCoords,
+  AnimatedScrollHelperState,
 } from '../scroller-utilities';
 
-export interface MasonryListScrollerRef {
+export interface MasonryListScrollerRef extends AnimatedScrollHelperState {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerState;
-  scrollTo: (props: ScrollToProps) => void;
-  scrollIntoView: (props: ScrollIntoViewProps) => void;
 
   // NOTE(amadeus): This will probably need to be tweaked a bit to accomodate Masonry's differing API
   // NOTE(amadeus): Need to implement these APIs still...
@@ -126,8 +124,26 @@ export default function createMasonryListScroller(
       },
       [forceUpdateOnChunkChange, scrollerState, forceUpdate]
     );
-
-    const {scrollTo, scrollIntoView} = useAnimatedScroll(scrollerRef, getScrollerState);
+    const [spring] = useState(
+      () =>
+        new ManualSpring({
+          // Some decent settings for managing a range of scroll speeds
+          tension: 200,
+          friction: 35,
+          mass: 2,
+          clamp: true,
+          callback: (value: number, abort: () => void) => {
+            const {current} = scrollerRef;
+            if (current == null) return abort();
+            if (orientation === 'vertical') {
+              current.scrollTop = value;
+            } else {
+              current.scrollLeft = value;
+            }
+          },
+          getNodeWindow: () => scrollerRef.current?.ownerDocument?.defaultView || null,
+        })
+    );
     useResizeObserverSubscription({ref: scrollerRef, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
     useImperativeHandle(
@@ -137,10 +153,9 @@ export default function createMasonryListScroller(
           return scrollerRef.current;
         },
         getScrollerState,
-        scrollTo,
-        scrollIntoView,
+        ...getAnimatedScrollHelpers(scrollerRef, getScrollerState, spring),
       }),
-      [scrollerRef, getScrollerState, scrollTo, scrollIntoView]
+      [scrollerRef, getScrollerState, spring]
     );
     const handleScroll = useCallback(
       (event: ScrollEvent) => {
