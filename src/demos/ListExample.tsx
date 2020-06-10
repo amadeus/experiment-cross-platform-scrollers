@@ -74,11 +74,11 @@ export default memo(({size, dir}: ListExampleProps) => {
       onScroll={handleScroll}
       className={classes.join(' ')}
       sections={LIST_SECTIONS}
+      sectionHeight={48}
+      rowHeight={24}
       renderSection={renderListSection}
       renderRow={renderRow}
       wrapSection={wrapSection}
-      sectionHeight={48}
-      rowHeight={24}
       paddingBottom={8}
     />
   );
