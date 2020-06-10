@@ -9,7 +9,7 @@ import {
 } from '../scroller-utilities';
 import type {ScrollerComponentBaseProps, ScrollerState, AnimatedScrollHelperState} from '../scroller-utilities';
 
-// Your basic Scroller component.  It's flexible in that it can have state
+// Your AdvancedScroller component.  It's flexible in that it can have state
 // queried and scroll positions set as needed.  It also includes the basic
 // padding fixes as needed.
 
@@ -18,15 +18,23 @@ export interface ScrollerRef extends AnimatedScrollHelperState {
   getScrollerState: () => ScrollerState;
 }
 
-export interface ScrollerProps extends ScrollerComponentBaseProps {
+export interface AdvancedScrollerProps extends ScrollerComponentBaseProps {
   orientation?: 'vertical' | 'horizontal';
   children: React.ReactNode;
 }
 
-export default function createScroller(scrollbarClassName?: string) {
+export default function createAdvancedScroller(scrollbarClassName?: string) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   return forwardRef(function Scroller(
-    {children, className, dir = 'ltr', orientation = 'vertical', paddingFix = true, style, ...props}: ScrollerProps,
+    {
+      children,
+      className,
+      dir = 'ltr',
+      orientation = 'vertical',
+      paddingFix = true,
+      style,
+      ...props
+    }: AdvancedScrollerProps,
     ref: React.Ref<ScrollerRef>
   ) {
     const {scrollerRef, getScrollerState} = useUncachedScrollerState();
@@ -62,10 +70,12 @@ export default function createScroller(scrollbarClassName?: string) {
       [scrollerRef, getScrollerState, orientation, spring]
     );
     const paddingNode = usePaddingFixes({paddingFix, orientation, dir, className, scrollerRef, specs});
-    const classes = [scrollbarClassName, className].filter((str) => str != null);
-    const mergedStyles = getMergedOrientationStyles(orientation, style);
     return (
-      <div ref={scrollerRef} className={classes.join(' ')} style={mergedStyles} {...props}>
+      <div
+        ref={scrollerRef}
+        className={[scrollbarClassName, className].filter((str) => str != null).join(' ')}
+        style={getMergedOrientationStyles(orientation, style)}
+        {...props}>
         {children}
         {paddingNode}
       </div>
