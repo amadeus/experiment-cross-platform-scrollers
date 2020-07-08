@@ -1,7 +1,8 @@
 export {default as getAnimatedScrollHelpers} from './core/getAnimatedScrollHelpers';
 export type {
   ScrollToProps,
-  ScrollIntoViewProps,
+  ScrollIntoViewRectProps,
+  ScrollIntoViewNodeProps,
   AnimatedScrollHelperState,
   ScrollToAPI,
 } from './core/getAnimatedScrollHelpers';
@@ -33,8 +34,8 @@ export type {UncachedScrollerUseState} from './useUncachedScrollerState';
 export {default as useVirtualizedMasonryState} from './useVirtualizedMasonryState';
 export type {VirtualizedMasonryProps, VirtualizedMasonryUseState} from './useVirtualizedMasonryState';
 
-export {default as useVirtualizedState} from './useVirtualizedState';
-export type {VirtualizedStateProps, VirtualizedUseState} from './useVirtualizedState';
+export {default as useVirtualizedState, useVirtualizedAnchor} from './useVirtualizedState';
+export type {VirtualizedStateProps, VirtualizedUseState, Anchor} from './useVirtualizedState';
 
 export {default as ListComputer} from './core/ListComputer';
 export type {
@@ -47,6 +48,7 @@ export type {
   ListItem,
   ListState,
   ListComputerProps,
+  GetAnchorId,
 } from './core/ListComputer';
 
 export {
@@ -82,13 +84,14 @@ export {
   STYLES_AUTO,
 } from './core/getMergedOrientationStyles';
 
+export {default as useScrollSpring} from './useScrollSpring';
+
 export {default as getScrollbarSpecs} from './core/getScrollbarSpecs';
 
 export type {ScrollbarSpecs} from './core/getScrollbarSpecs';
 
 export type {
   ScrollEvent,
-  ScrollHandler,
   ScrollerOrientationTypes,
   ScrollerComponentBaseProps,
   ScrollerState,

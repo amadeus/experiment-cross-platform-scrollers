@@ -42,7 +42,7 @@ export default function getAnimatedListScrollHelpers(
     // an optional row to scroll to
     scrollToIndex({section, row, animate, callback, padding = 0}: ScrollToIndexProps) {
       const [start, height] = getScrollPosition(section, row);
-      helpers.scrollIntoView({
+      helpers.scrollIntoViewRect({
         start,
         end: start + height,
         padding,

@@ -1,6 +1,6 @@
 import {useLayoutEffect} from 'react';
 
-export type ResizeObserverUpdateCallback = () => void;
+export type ResizeObserverUpdateCallback = () => unknown;
 
 export declare class ResizeObserverInterface {
   observe(target: Element, options?: {box?: 'content-box' | 'border-box'}): void;

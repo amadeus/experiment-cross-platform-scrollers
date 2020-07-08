@@ -6,6 +6,8 @@ export type ListItemSection = {
   type: 'section';
   section: number;
   listIndex: number;
+  offsetTop: number;
+  anchorId: string | undefined;
 };
 
 export type ListItemRow = {
@@ -14,11 +16,14 @@ export type ListItemRow = {
   row: number;
   rowIndex: number;
   listIndex: number;
+  offsetTop: number;
+  anchorId: string | undefined;
 };
 
 export type ListItemFooter = {
   type: 'footer';
   section: number;
+  offsetTop: number;
 };
 
 export type ListItem = ListItemSection | ListItemRow | ListItemFooter;
@@ -29,6 +34,8 @@ export interface ListState {
   items: ListItem[];
 }
 
+export type GetAnchorId = (section: number, row?: number | undefined) => string | undefined;
+
 export interface ListComputerProps {
   sectionHeight: ListSectionHeight;
   rowHeight: ListRowHeight;
@@ -36,18 +43,28 @@ export interface ListComputerProps {
   paddingTop: number;
   paddingBottom: number;
   sections: number[];
+  getAnchorId: GetAnchorId | undefined;
 }
 
 class ListComputer {
   sectionHeight: ListSectionHeight = 0;
   rowHeight: ListRowHeight = 0;
   footerHeight: ListFooterHeight | undefined = 0;
-  uniform: boolean = true;
+  uniform: boolean = false;
   paddingBottom: number = 0;
   paddingTop: number = 0;
   sections: number[] = [];
+  getAnchorId: GetAnchorId = () => undefined;
 
-  mergeProps({sectionHeight, rowHeight, footerHeight, paddingTop, paddingBottom, sections}: ListComputerProps) {
+  mergeProps({
+    sectionHeight,
+    rowHeight,
+    footerHeight,
+    paddingTop,
+    paddingBottom,
+    sections,
+    getAnchorId,
+  }: ListComputerProps) {
     this.sections = sections;
     this.sectionHeight = sectionHeight;
     this.rowHeight = rowHeight;
@@ -55,6 +72,7 @@ class ListComputer {
     this.uniform = typeof rowHeight === 'number';
     this.paddingTop = paddingTop;
     this.paddingBottom = paddingBottom;
+    this.getAnchorId = getAnchorId || this.getAnchorId;
   }
 
   getHeight(): number {
@@ -93,18 +111,19 @@ class ListComputer {
   }
 
   compute(top: number, bottom: number): ListState {
-    let height = this.paddingTop;
-    let spacerTop = this.paddingTop;
+    let offsetTop = this.paddingTop;
+    let spacerTop = offsetTop;
+    let currentOffsetTop = offsetTop;
     let rowIndex = 0;
     let listIndex = 0;
     const items: ListItem[] = [];
     const isVisible = (itemHeight: number) => {
-      const prevHeight = height;
-      height += itemHeight;
-      if (height < top) {
+      currentOffsetTop = offsetTop;
+      offsetTop += itemHeight;
+      if (offsetTop < top) {
         spacerTop += itemHeight;
         return false;
-      } else if (prevHeight > bottom) {
+      } else if (currentOffsetTop > bottom) {
         return false;
       } else {
         return true;
@@ -119,7 +138,13 @@ class ListComputer {
       }
 
       if (isVisible(this.getHeightForSection(section))) {
-        items.push({type: 'section', section, listIndex});
+        items.push({
+          type: 'section',
+          section,
+          listIndex,
+          offsetTop: currentOffsetTop,
+          anchorId: this.getAnchorId(section),
+        });
       }
       listIndex += 1;
 
@@ -127,7 +152,15 @@ class ListComputer {
         const rowHeight = this.getHeightForRow(section, 0);
         for (let row = 0; row < rows; row++) {
           if (isVisible(rowHeight)) {
-            items.push({type: 'row', section, listIndex, row, rowIndex});
+            items.push({
+              type: 'row',
+              section,
+              listIndex,
+              row,
+              rowIndex,
+              offsetTop: currentOffsetTop,
+              anchorId: this.getAnchorId(section, row),
+            });
           }
           rowIndex += 1;
           listIndex += 1;
@@ -135,7 +168,15 @@ class ListComputer {
       } else {
         for (let row = 0; row < rows; row++) {
           if (isVisible(this.getHeightForRow(section, row))) {
-            items.push({type: 'row', section, listIndex, row, rowIndex});
+            items.push({
+              type: 'row',
+              section,
+              listIndex,
+              row,
+              rowIndex,
+              offsetTop: currentOffsetTop,
+              anchorId: this.getAnchorId(section, row),
+            });
           }
           rowIndex += 1;
           listIndex += 1;
@@ -143,13 +184,13 @@ class ListComputer {
       }
 
       if (isVisible(this.getHeightForFooter(section))) {
-        items.push({type: 'footer', section});
+        items.push({type: 'footer', section, offsetTop: currentOffsetTop});
       }
     }
 
     return {
       spacerTop,
-      totalHeight: height + this.paddingBottom,
+      totalHeight: offsetTop + this.paddingBottom,
       items,
     };
   }
@@ -165,11 +206,11 @@ class ListComputer {
         foundTarget = true;
         break;
       }
-      scrollTop += this.getHeightForSection(section);
       if (rows === 0) {
         section += 1;
         continue;
       }
+      scrollTop += this.getHeightForSection(section);
       if (this.uniform) {
         const uniformHeight = this.getHeightForRow(section, 0);
         if (section === targetSection && targetRow != null) {

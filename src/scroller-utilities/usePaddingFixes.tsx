@@ -3,12 +3,23 @@ import React, {useRef, useLayoutEffect, useMemo} from 'react';
 import type {ScrollerOrientationTypes} from './core/SharedTypes';
 import type {ScrollbarSpecs} from './core/getScrollbarSpecs';
 
-const DEFAULT_STYLES = Object.freeze({
-  pointerEvents: 'none',
-  minHeight: 1,
-  minWidth: 1,
-  flex: '0 0 auto',
-} as const);
+interface DEFAULT_STYLES {
+  position: 'absolute' | 'relative';
+  pointerEvents: 'none';
+  minHeight: 1 | 0;
+  minWidth: 1 | 0;
+  flex: '0 0 auto';
+}
+
+function getDefaultStyles(orientation: 'vertical' | 'horizontal'): DEFAULT_STYLES {
+  return {
+    position: orientation === 'vertical' ? 'absolute' : 'relative',
+    pointerEvents: 'none',
+    minHeight: orientation === 'vertical' ? 0 : 1,
+    minWidth: orientation === 'horizontal' ? 0 : 1,
+    flex: '0 0 auto',
+  };
+}
 
 export interface PaddingFixProps {
   paddingFix?: boolean;
@@ -45,6 +56,13 @@ export default function usePaddingFixes({
     if (nodeWindow == null) {
       return;
     }
+    // With how scroller works - we can't allow inline padding to be used.  We
+    // also have to reset the inline padding styles we've applied so we can
+    // properly measure the developer's intention
+    scrollerNode.style.paddingTop = '';
+    scrollerNode.style.paddingBottom = '';
+    scrollerNode.style.paddingLeft = '';
+    scrollerNode.style.paddingRight = '';
     const computedStyle = nodeWindow.getComputedStyle(scrollerNode);
     if (orientation === 'vertical') {
       if (dir === 'rtl') {
@@ -70,17 +88,7 @@ export default function usePaddingFixes({
     }
   }, [orientation, dir, className, scrollerRef, paddingFix, specs]);
   return useMemo(
-    () =>
-      orientation !== 'auto' ? (
-        <div
-          aria-hidden
-          style={{
-            position: orientation === 'vertical' ? 'absolute' : 'relative',
-            ...DEFAULT_STYLES,
-          }}
-          ref={spacingRef}
-        />
-      ) : null,
+    () => (orientation !== 'auto' ? <div aria-hidden style={getDefaultStyles(orientation)} ref={spacingRef} /> : null),
     [orientation]
   );
 }

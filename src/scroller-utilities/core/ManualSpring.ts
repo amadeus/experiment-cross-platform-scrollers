@@ -1,4 +1,4 @@
-export type ManualSpringCallback = (currentValue: number, abort: () => void) => void;
+export type ManualSpringCallback = (currentValue: number, abort: () => void) => unknown;
 
 export interface ManualSpringProps {
   callback: ManualSpringCallback;
@@ -15,7 +15,7 @@ export interface ManualSpringToProps {
   to: number;
   from?: number;
   animate?: boolean;
-  callback?: () => void;
+  callback?: () => unknown;
 }
 
 export type ManualSpringRestCallback = () => unknown;

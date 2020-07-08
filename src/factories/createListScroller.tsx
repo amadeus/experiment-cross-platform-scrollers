@@ -1,18 +1,18 @@
-import React, {useRef, useImperativeHandle, forwardRef, useCallback, useMemo, useEffect, useState} from 'react';
+import * as React from 'react';
+
 import {
   useResizeObserverSubscription,
   useVirtualizedState,
-  ManualSpring,
   getAnimatedListScrollHelpers,
   useCachedScrollerState,
   usePaddingFixes,
   getScrollbarSpecs,
   getMergedOrientationStyles,
+  useScrollSpring,
+  useVirtualizedAnchor,
 } from '../scroller-utilities';
+
 import type {
-  ScrollToProps,
-  ScrollIntoViewProps,
-  ScrollToIndexProps,
   ListSectionHeight,
   ListRowHeight,
   ListFooterHeight,
@@ -25,6 +25,7 @@ import type {
   ResizeObserverUpdateCallback,
   ScrollerComponentBaseProps,
   AnimatedListScrollHelperState,
+  GetAnchorId,
 } from '../scroller-utilities';
 
 // ListScroller mimics the API from the Discord List component.  The assumption
@@ -33,15 +34,15 @@ import type {
 // and minimize the work react has to do to reconcile new changes.  It also has
 // fairly complex requirements for animated scrolling as well.
 
+export type {ScrollerState as ListScrollerState};
+
 export type RenderSectionFunction = (item: ListItemSection) => React.ReactNode;
 export type RenderRowFunction = (item: ListItemRow) => React.ReactNode;
 export type RenderFooterFunction = (item: ListItemFooter) => React.ReactNode;
 export type RenderWrapperFunction = (section: number, children: React.ReactNode) => React.ReactNode;
+export type {ListItem, ListSectionHeight, ListRowHeight, ListFooterHeight};
 
 export interface ListScrollerProps extends ScrollerComponentBaseProps {
-  // NOTE(amadeus): We should probably not have this API if not really needed?
-  // onScrollerStateUpdate?: () => any;
-
   sections: number[];
   renderSection: RenderSectionFunction;
   renderRow: RenderRowFunction;
@@ -51,57 +52,36 @@ export interface ListScrollerProps extends ScrollerComponentBaseProps {
   sectionHeight: ListSectionHeight;
   rowHeight: ListRowHeight;
   footerHeight?: ListFooterHeight;
-  // NOTE(amadeus): We could potentially assume a function for height
-  // calculation is not uniform, but if it's just a number, than it's uniform
-  // uniform?: boolean;
 
-  // NOTE(amadeus): The size in pixels that we should chunk the scrollable region
   chunkSize?: number;
 
-  // NOTE(amadeus): Figure out how to annotate onResize since it wont actually
-  // have any event associated with it... - or even better... DO WE NEED IT?!
-  // We have the ResizeObserver, so I could see this being useful as an API...
-  // but ideally it's not needed
-  // onResize: () => any;
-
-  // NOTE(amadeus): Should we keep this?
   paddingTop?: number;
   paddingBottom?: number;
-
-  'aria-label'?: string;
-  'data-ref-id'?: string;
-  tabIndex?: -1 | 0;
-
-  // NOTE(amadeus): This is used specifically in 1 place in the app, but I
-  // think ideally we should not support it since it can cause issues with
-  // rendering/calculating
-  // children?: React.ReactNode;
+  onResize?: (() => unknown) | null;
+  getAnchorId?: GetAnchorId | undefined;
+  // NOTE(amadeus): We should not allow children to be passed to the List
+  // component
+  children?: undefined;
 }
 
 export interface ListScrollerRef extends AnimatedListScrollHelperState {
   getScrollerNode: () => HTMLDivElement | null;
   getScrollerState: () => ScrollerState;
-  scrollTo: (props: ScrollToProps) => void;
-  scrollIntoView: (props: ScrollIntoViewProps) => void;
-  scrollToIndex: (props: ScrollToIndexProps) => void;
-  isItemVisible: (section: number, row?: number | undefined) => boolean;
   getScrollPosition: (section: number, row?: number | undefined, completely?: boolean) => [number, number];
   getItems: () => ListItem[];
   getSectionRowFromIndex: (index: number) => [number, number];
 }
 
-// NOTE(amadeus): Can we deprecate this?
 function useGetItems(items: ListItem[]) {
-  const itemsRef = useRef(items);
-  useEffect(() => void (itemsRef.current = items), [items]);
-  return useCallback(() => itemsRef.current, []);
+  const itemsRef = React.useRef(items);
+  React.useEffect(() => void (itemsRef.current = items), [items]);
+  return React.useCallback(() => itemsRef.current, []);
 }
 
-// NOTE(amadeus): Can we deprecate this?
 function useGetSectionRowFromIndex(sections: number[]) {
-  const sectionsRef = useRef(sections);
-  useEffect(() => void (sectionsRef.current = sections), [sections]);
-  return useCallback((index: number): [number, number] => {
+  const sectionsRef = React.useRef(sections);
+  React.useEffect(() => void (sectionsRef.current = sections), [sections]);
+  return React.useCallback((index: number): [number, number] => {
     const {current: sections} = sectionsRef;
     let sectionSum = 0;
     for (let section = 0; section < sections.length; section++) {
@@ -133,7 +113,7 @@ function renderListItems({
   items,
   spacerTop,
 }: RenderListItemProps): React.ReactNode {
-  const content: React.ReactNodeArray = [<div style={{height: spacerTop}} key="list-spacer-top" />];
+  const content: React.ReactNodeArray = [<div style={{height: spacerTop}} key="---list-spacer-top" />];
   let sectionItems: React.ReactNodeArray = [];
   let lastSection: number = 0;
   items.forEach((item) => {
@@ -157,13 +137,10 @@ function renderListItems({
   if (sectionItems.length > 0) {
     content.push(wrapSection ? wrapSection(lastSection, sectionItems) : sectionItems);
   }
-  return content;
+  return content.flat();
 }
 
-export default function createListScroller(
-  scrollbarClassName: string | undefined,
-  ResizeObserverClass: typeof ResizeObserver
-) {
+export default function createListScroller(scrollbarClassName: string, ResizeObserverClass: typeof ResizeObserver) {
   const specs = getScrollbarSpecs(scrollbarClassName);
   const listenerMap = new Map<Element, ResizeObserverUpdateCallback>();
   const resizeObserver = new ResizeObserverClass((entries) => {
@@ -172,110 +149,108 @@ export default function createListScroller(
       onUpdate != null && onUpdate();
     });
   });
-  return forwardRef<ListScrollerRef, ListScrollerProps>(function ListScroller(
-    {
-      className,
-      onScroll,
-      dir = 'ltr',
-      paddingFix = true,
-      sections,
-      sectionHeight,
-      rowHeight,
-      footerHeight = 0,
-      renderSection,
-      renderRow,
-      renderFooter,
-      wrapSection,
-      paddingTop,
-      paddingBottom,
-      chunkSize,
-      style,
-      ...props
-    },
-    ref
-  ) {
-    const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
-    usePaddingFixes({scrollerRef, className, specs, orientation: 'vertical', dir});
-    // Wrapper around the content of the scroller - used for both resize
-    // observations and total scrollable height
-    const content = useRef<HTMLDivElement>(null);
-    // Using the base scroller data, compute the current list scroller state
-    const {spacerTop, totalHeight, items, listComputer, forceUpdateOnChunkChange} = useVirtualizedState({
-      sections,
-      sectionHeight,
-      rowHeight,
-      footerHeight,
-      paddingTop,
-      paddingBottom,
-      chunkSize,
-      getScrollerState,
-    });
-    const [spring] = useState(
-      () =>
-        new ManualSpring({
-          // Some decent settings for managing a range of scroll speeds
-          tension: 200,
-          friction: 35,
-          mass: 2,
-          clamp: true,
-          callback: (value: number, abort: () => void) => {
-            const {current} = scrollerRef;
-            if (current == null) return abort();
-            if (orientation === 'vertical') {
-              current.scrollTop = value;
-            } else {
-              current.scrollLeft = value;
-            }
-          },
-          getNodeWindow: () => scrollerRef.current?.ownerDocument?.defaultView || null,
-        })
-    );
-    const markStateDirty = useCallback(
-      (dirtyType: 1 | 2 = 2) => {
-        if (dirtyType > scrollerState.current.dirty) {
-          scrollerState.current.dirty = dirtyType;
-          forceUpdateOnChunkChange(dirtyType);
-        }
+  return React.forwardRef<ListScrollerRef, ListScrollerProps>(
+    (
+      {
+        className,
+        onScroll,
+        onResize = null,
+        dir = 'ltr',
+        sections,
+        sectionHeight,
+        rowHeight,
+        footerHeight = 0,
+        renderSection,
+        renderRow,
+        renderFooter,
+        wrapSection,
+        getAnchorId,
+        paddingTop,
+        paddingBottom,
+        chunkSize,
+        style,
+        ...props
       },
-      [forceUpdateOnChunkChange, scrollerState]
-    );
-    useResizeObserverSubscription({ref: scrollerRef, onUpdate: markStateDirty, resizeObserver, listenerMap});
-    useResizeObserverSubscription({ref: content, onUpdate: markStateDirty, resizeObserver, listenerMap});
-    const getItems = useGetItems(items);
-    const getSectionRowFromIndex = useGetSectionRowFromIndex(sections);
-    useImperativeHandle<ListScrollerRef, ListScrollerRef>(
-      ref,
-      () => ({
-        getScrollerNode() {
-          return scrollerRef.current;
-        },
+      ref
+    ) => {
+      const {scrollerRef, scrollerState, getScrollerState} = useCachedScrollerState();
+      usePaddingFixes({scrollerRef, className, specs, orientation: 'vertical', dir});
+      // Using the base scroller data, compute the current list scroller state
+      const {spacerTop, totalHeight, items, listComputer, forceUpdateOnChunkChange, anchor} = useVirtualizedState({
+        sections,
+        sectionHeight,
+        rowHeight,
+        footerHeight,
+        paddingTop,
+        paddingBottom,
+        chunkSize,
         getScrollerState,
-        getItems,
-        getSectionRowFromIndex,
-        ...getAnimatedListScrollHelpers(scrollerRef, getScrollerState, listComputer, spring),
-      }),
-      [scrollerRef, getScrollerState, getSectionRowFromIndex, getItems, listComputer, spring]
-    );
-    const handleScroll = useCallback(
-      (event: ScrollEvent) => {
-        markStateDirty(1);
-        onScroll != null && onScroll(event);
-      },
-      [onScroll, markStateDirty]
-    );
-    const classes = [scrollbarClassName, className].filter((str) => str != null);
-    const mergedStyles = getMergedOrientationStyles('vertical', style);
-    return (
-      <div ref={scrollerRef} onScroll={handleScroll} className={classes.join(' ')} style={mergedStyles} {...props}>
-        {useMemo(
-          () => (
-            <div ref={content} style={{height: totalHeight}}>
-              {renderListItems({items, renderSection, renderRow, renderFooter, wrapSection, spacerTop})}
-            </div>
-          ),
-          [items, renderSection, renderRow, renderFooter, wrapSection, totalHeight, spacerTop]
-        )}
-      </div>
-    );
-  });
+        getAnchorId,
+      });
+      const spring = useScrollSpring(scrollerRef);
+      const onResizeRef: React.MutableRefObject<(() => unknown) | null> = React.useRef(onResize);
+      React.useLayoutEffect(() => void (onResizeRef.current = onResize));
+      const markDirtyAndUpdate = React.useCallback(
+        (dirtyType: 1 | 2 = 2) => {
+          if (dirtyType > scrollerState.current.dirty) {
+            scrollerState.current.dirty = dirtyType;
+          }
+          if (dirtyType === 2) {
+            onResizeRef.current?.();
+          }
+          forceUpdateOnChunkChange(dirtyType);
+        },
+        [forceUpdateOnChunkChange, scrollerState]
+      );
+      useResizeObserverSubscription({ref: scrollerRef, onUpdate: markDirtyAndUpdate, resizeObserver, listenerMap});
+      const getItems = useGetItems(items);
+      const getSectionRowFromIndex = useGetSectionRowFromIndex(sections);
+      React.useImperativeHandle<ListScrollerRef, ListScrollerRef>(
+        ref,
+        () => ({
+          getScrollerNode() {
+            return scrollerRef.current;
+          },
+          getScrollerState,
+          getItems,
+          getSectionRowFromIndex,
+          ...getAnimatedListScrollHelpers(scrollerRef, getScrollerState, listComputer, spring),
+        }),
+        [scrollerRef, getScrollerState, getSectionRowFromIndex, getItems, listComputer, spring]
+      );
+      const handleScroll = React.useCallback(
+        (event: ScrollEvent) => {
+          markDirtyAndUpdate(1);
+          onScroll != null && onScroll(event);
+        },
+        [onScroll, markDirtyAndUpdate]
+      );
+      // If any aspect of layout is affected, we need to mark the state as
+      // dirty after it's updated
+      React.useLayoutEffect(() => {
+        if (scrollerState.current.dirty !== 2) {
+          scrollerState.current.dirty = 2;
+        }
+      }, [items, renderSection, renderRow, renderFooter, wrapSection, totalHeight, spacerTop, scrollerState]);
+      useVirtualizedAnchor({scrollerRef, anchor, getScrollerState, listComputer, getAnchorId, totalHeight});
+      const classes = [className, scrollbarClassName].filter((a) => a != null).join(' ');
+      return (
+        <div
+          ref={scrollerRef}
+          onScroll={handleScroll}
+          className={classes}
+          style={getMergedOrientationStyles('vertical', style)}
+          {...props}>
+          {React.useMemo(
+            () => (
+              <div style={{height: totalHeight}}>
+                {renderListItems({items, renderSection, renderRow, renderFooter, wrapSection, spacerTop})}
+              </div>
+            ),
+            [items, renderSection, renderRow, renderFooter, wrapSection, totalHeight, spacerTop]
+          )}
+        </div>
+      );
+    }
+  );
 }
