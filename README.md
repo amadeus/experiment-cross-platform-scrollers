@@ -19,3 +19,6 @@ This experiment had a few challenges to overcome.
 * Support for content that has uniform padding around it, both with and without
   scrollbars
 * Support scrollbar styles only showing when mousing over the scroll region
+
+### License
+MIT
